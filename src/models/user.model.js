@@ -1,67 +1,80 @@
-const db = require("../config/db");
-const bcrypt = require("bcrypt");
+const pool = require("../config/db"); // Import MySQL connection
 
-class User {
-  static async getAll() {
+const User = {
+  // Lấy tất cả người dùng
+  getAllUsers: async () => {
     try {
-      const [rows] = await db.query("SELECT * FROM users");
+      const [rows] = await pool.query("SELECT * FROM users");
       return rows;
     } catch (error) {
-      throw new Error("Failed to fetch users");
+      throw error;
     }
-  }
+  },
 
-  static async getUserById(id) {
+  // Lấy một người dùng theo ID
+  getUserById: async (id) => {
     try {
-      const [rows] = await db.query(
-        "SELECT user_id, full_name, email, phone, address, role FROM users WHERE user_id = ?",
+      const [rows] = await pool.query(
+        "SELECT user_id, full_name, email, phone, address, role, status, created_at FROM users WHERE user_id = ?",
         [id]
       );
-      return rows.length > 0 ? rows[0] : null;
+      return rows;
     } catch (error) {
-      throw new Error("Failed to fetch user");
+      throw error;
     }
-  }
+  },
 
-  static async createUser(userData) {
+  // Tạo người dùng mới
+  createUser: async (userData) => {
+    const { full_name, email, password_hash, phone, address } = userData;
     try {
-      const { full_name, email, password_hash, phone, address, role } =
-        userData;
-      const hashedPassword = await bcrypt.hash(password_hash, 10); // Mã hóa mật khẩu
-
-      const [result] = await db.query(
-        "INSERT INTO users (full_name, email, password_hash, phone, address, role) VALUES (?, ?, ?, ?, ?, ?)",
-        [full_name, email, hashedPassword, phone, address, role || "customer"]
+      const [result] = await pool.query(
+        "INSERT INTO users (full_name, email, password_hash, phone, address) VALUES (?, ?, ?, ?, ?)",
+        [full_name, email, password_hash, phone, address]
       );
       return result;
     } catch (error) {
-      throw new Error("Failed to create user");
+      throw error;
     }
-  }
+  },
 
-  static async updateUser(id, userData) {
+  // Cập nhật thông tin người dùng
+  updateUser: async (id, userData) => {
+    const { full_name, phone, address } = userData;
     try {
-      const { full_name, email, phone, address, role } = userData;
-      const [result] = await db.query(
-        "UPDATE users SET full_name = ?, email = ?, phone = ?, address = ?, role = ? WHERE user_id = ?",
-        [full_name, email, phone, address, role, id]
+      const [result] = await pool.query(
+        "UPDATE users SET full_name = ?, phone = ?, address = ?, updated_at = NOW() WHERE user_id = ?",
+        [full_name, phone, address, id]
       );
       return result;
     } catch (error) {
-      throw new Error("Failed to update user");
+      throw error;
     }
-  }
+  },
 
-  static async deleteUser(id) {
+  // Xóa người dùng
+  deleteUser: async (id) => {
     try {
-      const [result] = await db.query("DELETE FROM users WHERE user_id = ?", [
+      const [result] = await pool.query("DELETE FROM users WHERE user_id = ?", [
         id,
       ]);
       return result;
     } catch (error) {
-      throw new Error("Failed to delete user");
+      throw error;
     }
-  }
-}
+  },
+
+  // Kiểm tra đăng nhập
+  loginUser: async (email) => {
+    try {
+      const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [
+        email,
+      ]);
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  },
+};
 
 module.exports = User;

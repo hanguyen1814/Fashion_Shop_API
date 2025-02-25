@@ -1,77 +1,132 @@
 const Category = require("../models/category.model");
 
-const getAllCategories = async (req, res) => {
-  try {
-    const categories = await Category.getAllCategories();
-    res.status(200).json(categories);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+const CategoryController = {
+  getAllCategories: async (req, res) => {
+    try {
+      const [results] = await Category.getAllCategoriesWithBrands();
+      const buildCategoryTree = (categories, parentId = null) => {
+        return categories
+          .filter((cat) => cat.parent_id === parentId)
+          .map((cat) => ({
+            category_id: cat.category_id,
+            name: cat.name,
+            slug: cat.slug,
+            description: cat.description,
+            parent_id: cat.parent_id,
+            status: cat.status,
+            image: cat.image,
+            brand: cat.brand_id
+              ? {
+                  brand_id: cat.brand_id,
+                  name: cat.brand_name,
+                  slug: cat.brand_slug,
+                  logo: cat.brand_logo,
+                }
+              : null,
+            parent_category: cat.parent_category_id
+              ? {
+                  category_id: cat.parent_category_id,
+                  name: cat.parent_category_name,
+                  slug: cat.parent_category_slug,
+                }
+              : null,
+            children: buildCategoryTree(categories, cat.category_id),
+          }));
+      };
 
-const getCategoryById = async (req, res) => {
-  try {
+      const categoryTree = buildCategoryTree(results);
+      res.json(categoryTree);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  getCategoryById: async (req, res) => {
     const { id } = req.params;
-    const category = await Category.getCategoryById(id);
-    if (!category)
-      return res.status(404).json({ message: "Category not found" });
-    res.status(200).json(category);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+    try {
+      const [results] = await Category.getCategoryById(id);
+      if (results.length === 0)
+        return res.status(404).json({ message: "Category not found" });
 
-const getSubCategories = async (req, res) => {
-  try {
-    const { parentId } = req.params;
-    const categories = await Category.getSubCategories(parentId);
-    res.status(200).json(categories);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+      const cat = results[0];
+      const category = {
+        category_id: cat.category_id,
+        name: cat.name,
+        slug: cat.slug,
+        description: cat.description,
+        parent_id: cat.parent_id,
+        status: cat.status,
+        image: cat.image,
+        brand: cat.brand_id
+          ? {
+              brand_id: cat.brand_id,
+              name: cat.brand_name,
+              slug: cat.brand_slug,
+              logo: cat.brand_logo,
+            }
+          : null,
+        parent_category: cat.parent_category_id
+          ? {
+              category_id: cat.parent_category_id,
+              name: cat.parent_category_name,
+              slug: cat.parent_category_slug,
+            }
+          : null,
+      };
+      res.json(category);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
 
-const createCategory = async (req, res) => {
-  try {
-    const categoryId = await Category.createCategory(req.body);
-    res.status(201).json({
-      message: "Category created successfully",
-      category_id: categoryId,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+  createCategory: async (req, res) => {
+    const { name, slug, description, parent_id, brand_id, status, image } =
+      req.body;
+    try {
+      await Category.createCategory({
+        name,
+        slug,
+        description,
+        parent_id,
+        brand_id,
+        status,
+        image,
+      });
+      res.status(201).json({ message: "Category created successfully" });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
 
-const updateCategory = async (req, res) => {
-  try {
+  updateCategory: async (req, res) => {
     const { id } = req.params;
-    const affectedRows = await Category.updateCategory(id, req.body);
-    if (affectedRows === 0)
-      return res.status(404).json({ message: "Category not found" });
-    res.status(200).json({ message: "Category updated successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+    const { name, slug, description, parent_id, brand_id, status, image } =
+      req.body;
+    try {
+      await Category.updateCategory(id, {
+        name,
+        slug,
+        description,
+        parent_id,
+        brand_id,
+        status,
+        image,
+      });
+      res.json({ message: "Category updated successfully" });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
 
-const deleteCategory = async (req, res) => {
-  try {
+  deleteCategory: async (req, res) => {
     const { id } = req.params;
-    const affectedRows = await Category.deleteCategory(id);
-    if (affectedRows === 0)
-      return res.status(404).json({ message: "Category not found" });
-    res.status(200).json({ message: "Category deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+    try {
+      await Category.deleteCategory(id);
+      res.json({ message: "Category deleted successfully" });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
 };
 
-module.exports = {
-  getAllCategories,
-  getCategoryById,
-  getSubCategories,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-};
+module.exports = CategoryController;

@@ -1,85 +1,50 @@
 const db = require("../config/db");
 
-class Category {
-  static async getAllCategories() {
-    try {
-      const [rows] = await db.execute(`SELECT * FROM categories`);
-      return rows;
-    } catch (err) {
-      throw err;
-    }
-  }
+const Category = {
+  getAllCategoriesWithBrands: () => {
+    return db.query(
+      `SELECT c.*, b.name AS brand_name, b.slug AS brand_slug, b.logo AS brand_logo,
+              pc.category_id AS parent_category_id, pc.name AS parent_category_name, pc.slug AS parent_category_slug
+       FROM categories c
+       LEFT JOIN brands b ON c.brand_id = b.brand_id
+       LEFT JOIN categories pc ON c.parent_id = pc.category_id
+       ORDER BY c.parent_id IS NULL DESC, c.parent_id, c.category_id`
+    );
+  },
 
-  static async getCategoryById(id) {
-    try {
-      const [rows] = await db.execute(
-        `SELECT * FROM categories WHERE category_id = ?`,
-        [id]
-      );
-      return rows[0];
-    } catch (err) {
-      throw err;
-    }
-  }
+  getCategoryById: (id) => {
+    return db.query(
+      `SELECT c.*, b.name AS brand_name, b.slug AS brand_slug, b.logo AS brand_logo,
+              pc.category_id AS parent_category_id, pc.name AS parent_category_name, pc.slug AS parent_category_slug
+       FROM categories c
+       LEFT JOIN brands b ON c.brand_id = b.brand_id
+       LEFT JOIN categories pc ON c.parent_id = pc.category_id
+       WHERE c.category_id = ?`,
+      [id]
+    );
+  },
 
-  static async getSubCategories(parentId) {
-    try {
-      const [rows] = await db.execute(
-        `SELECT * FROM categories WHERE parent_id = ?`,
-        [parentId]
-      );
-      return rows;
-    } catch (err) {
-      throw err;
-    }
-  }
+  createCategory: (categoryData) => {
+    const { name, slug, description, parent_id, brand_id, status, image } =
+      categoryData;
+    return db.query(
+      "INSERT INTO categories (name, slug, description, parent_id, brand_id, status, image) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [name, slug, description, parent_id, brand_id, status, image]
+    );
+  },
 
-  static async createCategory(category) {
-    try {
-      const [result] = await db.execute(
-        `INSERT INTO categories (name, description, parent_id, image) VALUES (?, ?, ?, ?)`,
-        [
-          category.name,
-          category.description,
-          category.parent_id,
-          category.image,
-        ]
-      );
-      return result.insertId;
-    } catch (err) {
-      throw err;
-    }
-  }
+  updateCategory: (id, categoryData) => {
+    const { name, slug, description, parent_id, brand_id, status, image } =
+      categoryData;
+    return db.query(
+      "UPDATE categories SET name = ?, slug = ?, description = ?, parent_id = ?, brand_id = ?, status = ?, image = ?, updated_at = NOW() WHERE category_id = ?",
+      [name, slug, description, parent_id, brand_id, status, image, id]
+    );
+  },
 
-  static async updateCategory(id, category) {
-    try {
-      const [result] = await db.execute(
-        `UPDATE categories SET name = ?, description = ?, parent_id = ?, image = ?, updated_at = CURRENT_TIMESTAMP WHERE category_id = ?`,
-        [
-          category.name,
-          category.description,
-          category.parent_id,
-          category.image,
-          id,
-        ]
-      );
-      return result.affectedRows;
-    } catch (err) {
-      throw err;
-    }
-  }
-
-  static async deleteCategory(id) {
-    try {
-      const [result] = await db.execute(
-        `DELETE FROM categories WHERE category_id = ?`,
-        [id]
-      );
-      return result.affectedRows;
-    } catch (err) {
-      throw err;
-    }
-  }
-}
+  deleteCategory: (id) => {
+    return db.query("DELETE FROM categories WHERE category_id = ?", [id]);
+  },
+};
 
 module.exports = Category;

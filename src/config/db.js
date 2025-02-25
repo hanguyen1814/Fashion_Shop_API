@@ -1,5 +1,18 @@
 const mysql = require("mysql2");
-require("dotenv").config();
+const dotenv = require("dotenv");
+const fs = require("fs");
+
+const customEnvPath = "/home/flhwndf/Fashion_Shop/.env";
+
+if (fs.existsSync(customEnvPath)) {
+  dotenv.config({ path: customEnvPath });
+  console.log(`🟢 Đã tải file .env từ: ${customEnvPath}`);
+} else {
+  dotenv.config();
+  console.log(
+    "🟡 Không tìm thấy file .env tùy chỉnh, sử dụng file .env mặc định."
+  );
+}
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "localhost",

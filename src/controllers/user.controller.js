@@ -1,55 +1,114 @@
-const User = require("../models/user.model");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const userModel = require("../models/user.model");
 
-const userController = {
-  async getAll(req, res) {
+const SECRET_KEY = "your_secret_key"; // Replace with actual SECRET KEY
+
+const UserController = {
+  // Lấy danh sách người dùng
+  getAllUsers: async (req, res) => {
     try {
-      const users = await User.getAll();
+      const users = await userModel.getAllUsers();
       res.json(users);
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({ error: error.message });
     }
   },
 
-  async getUserById(req, res) {
+  // Lấy thông tin một người dùng
+  getUserById: async (req, res) => {
+    const { id } = req.params;
     try {
-      const user = await User.getUserById(req.params.id);
-      if (!user) return res.status(404).json({ message: "User not found" });
-      res.json(user);
+      const users = await userModel.getUserById(id);
+      if (users.length === 0) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(users[0]);
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({ error: error.message });
     }
   },
 
-  async create(req, res) {
+  // Đăng ký người dùng
+  registerUser: async (req, res) => {
     try {
-      const dataUser = req.body;
-      const result = await User.createUser(dataUser);
-      res.json(result);
+      const { full_name, email, password, phone, address } = req.body;
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const result = await userModel.createUser({
+        full_name,
+        email,
+        password_hash: hashedPassword,
+        phone,
+        address,
+      });
+
+      res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({ error: error.message });
     }
   },
 
-  async updateUser(req, res) {
+  // Đăng nhập người dùng
+  loginUser: async (req, res) => {
+    const { email, password } = req.body;
+
     try {
-      const id = req.params.id;
-      const userData = req.body;
-      const result = await User.updateUser(id, userData);
-      res.json(result);
+      const users = await userModel.loginUser(email);
+      if (users.length === 0) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      const user = users[0];
+      const isValidPassword = await bcrypt.compare(
+        password,
+        user.password_hash
+      );
+
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      const token = jwt.sign(
+        { user_id: user.user_id, email: user.email, role: user.role },
+        SECRET_KEY,
+        { expiresIn: "30d" }
+      );
+
+      res.json({ message: "Login successful", token });
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({ error: error.message });
     }
   },
 
-  async deleteUser(req, res) {
+  // Cập nhật thông tin người dùng
+  updateUser: async (req, res) => {
+    const { id } = req.params;
+    const { full_name, phone, address } = req.body;
+
     try {
-      const id = req.params.id;
-      const result = await User.deleteUser(id);
-      res.json(result);
+      const result = await userModel.updateUser(id, {
+        full_name,
+        phone,
+        address,
+      });
+      res.json({ message: "User updated successfully" });
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  // Xóa người dùng
+  deleteUser: async (req, res) => {
+    const { id } = req.params;
+
+    try {
+      const result = await userModel.deleteUser(id);
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
   },
 };
 
-module.exports = userController;
+module.exports = UserController;

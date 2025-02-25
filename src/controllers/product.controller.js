@@ -1,84 +1,142 @@
 const Product = require("../models/product.model");
 
-const getAllProducts = async (req, res) => {
-  try {
-    const { offset = 0, limit = 10 } = req.query;
-    const products = await Product.getAllProducts(
-      parseInt(offset),
-      parseInt(limit)
-    );
-    res.status(200).json(products);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+const formatProduct = (product, variants = []) => ({
+  product_id: product.product_id,
+  category_id: product.category_id,
+  brand_id: product.brand_id,
+  name: product.name,
+  description: product.description,
+  price: product.price,
+  origin_price: product.origin_price,
+  discount: product.discount,
+  stock: product.stock,
+  has_variants: product.has_variants,
+  sold: product.sold,
+  image: product.image,
+  images: product.images,
+  status: product.status,
+  created_at: product.created_at,
+  updated_at: product.updated_at,
+  category: {
+    name: product.category_name,
+    slug: product.category_slug,
+  },
+  brand: {
+    name: product.brand_name,
+    slug: product.brand_slug,
+  },
+  variants: product.has_variants ? variants : [],
+});
 
-const getProductsByCategory = async (req, res) => {
-  try {
-    const { categoryId } = req.params;
-    const { offset = 0, limit = 10 } = req.query;
-    const products = await Product.getProductsByCategory(
-      parseInt(categoryId),
-      parseInt(offset),
-      parseInt(limit)
-    );
-    res.status(200).json(products);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+const ProductController = {
+  getAllProducts: async (req, res) => {
+    try {
+      const [results] = await Product.getAllProducts();
+      res.json(results.map(formatProduct));
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
 
-const getProductById = async (req, res) => {
-  try {
+  getProductById: async (req, res) => {
     const { id } = req.params;
-    const product = await Product.getProductById(id);
-    if (!product) return res.status(404).json({ message: "Product not found" });
-    res.status(200).json(product);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+    try {
+      const [results] = await Product.getProductById(id);
+      if (results.length === 0)
+        return res.status(404).json({ message: "Product not found" });
 
-const createProduct = async (req, res) => {
-  try {
-    const productId = await Product.createProduct(req.body);
-    res
-      .status(201)
-      .json({ message: "Product created successfully", product_id: productId });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+      const product = results[0];
+      let variants = [];
+      if (product.has_variants) {
+        const [variantResults] = await Product.getProductVariants(id);
+        variants = variantResults;
+      }
+      res.json(formatProduct(product, variants));
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
 
-const updateProduct = async (req, res) => {
-  try {
+  createProduct: async (req, res) => {
+    const { name, description, category_id, brand_id, price, status, images } =
+      req.body;
+    try {
+      await Product.createProduct({
+        name,
+        description,
+        category_id,
+        brand_id,
+        price,
+        status,
+        images,
+      });
+      res.status(201).json({ message: "Product created successfully" });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  updateProduct: async (req, res) => {
     const { id } = req.params;
-    const affectedRows = await Product.updateProduct(id, req.body);
-    if (affectedRows === 0)
-      return res.status(404).json({ message: "Product not found" });
-    res.status(200).json({ message: "Product updated successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+    const { name, description, category_id, brand_id, price, status, images } =
+      req.body;
+    try {
+      await Product.updateProduct(id, {
+        name,
+        description,
+        category_id,
+        brand_id,
+        price,
+        status,
+        images,
+      });
+      res.json({ message: "Product updated successfully" });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
 
-const deleteProduct = async (req, res) => {
-  try {
+  deleteProduct: async (req, res) => {
     const { id } = req.params;
-    const affectedRows = await Product.deleteProduct(id);
-    if (affectedRows === 0)
-      return res.status(404).json({ message: "Product not found" });
-    res.status(200).json({ message: "Product deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+    try {
+      await Product.deleteProduct(id);
+      res.json({ message: "Product deleted successfully" });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  searchProducts: async (req, res) => {
+    const { id, catid, brandid, limit = 10, page = 1 } = req.query;
+    const offset = (page - 1) * limit;
+
+    try {
+      const [results] = await Product.searchProducts({
+        id,
+        catid,
+        brandid,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      });
+
+      const formattedResults = await Promise.all(
+        results.map(async (product) => {
+          let variants = [];
+          if (product.has_variants) {
+            const [variantResults] = await Product.getProductVariants(
+              product.product_id
+            );
+            variants = variantResults;
+          }
+          return formatProduct(product, variants);
+        })
+      );
+
+      res.json(formattedResults);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
 };
 
-module.exports = {
-  getAllProducts,
-  getProductsByCategory,
-  getProductById,
-  createProduct,
-  updateProduct,
-  deleteProduct,
-};
+module.exports = ProductController;

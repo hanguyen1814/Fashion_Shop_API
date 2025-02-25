@@ -1,96 +1,78 @@
 const db = require("../config/db");
 
-class Product {
-  static async getAllProducts(offset = 0, limit = 10) {
-    try {
-      const [rows] = await db.execute(`SELECT * FROM products LIMIT ?, ?`, [
-        offset,
-        limit,
-      ]);
-      return rows;
-    } catch (err) {
-      throw err;
-    }
-  }
+const Product = {
+  getAllProducts: () => {
+    return db.query(
+      `SELECT p.*, c.name AS category_name, c.slug AS category_slug, b.name AS brand_name, b.slug AS brand_slug
+       FROM products p
+       LEFT JOIN categories c ON p.category_id = c.category_id
+       LEFT JOIN brands b ON p.brand_id = b.brand_id`
+    );
+  },
 
-  static async getProductsByCategory(categoryId, offset = 0, limit = 10) {
-    try {
-      const [rows] = await db.execute(
-        `SELECT * FROM products WHERE category_id = ? LIMIT ?, ?`,
-        [categoryId, offset, limit]
-      );
-      return rows;
-    } catch (err) {
-      throw err;
-    }
-  }
+  getProductById: (id) => {
+    return db.query(
+      `SELECT p.*, c.name AS category_name, c.slug AS category_slug, b.name AS brand_name, b.slug AS brand_slug
+       FROM products p
+       LEFT JOIN categories c ON p.category_id = c.category_id
+       LEFT JOIN brands b ON p.brand_id = b.brand_id
+       WHERE p.product_id = ?`,
+      [id]
+    );
+  },
 
-  static async getProductById(id) {
-    try {
-      const [rows] = await db.execute(
-        `SELECT * FROM products WHERE product_id = ?`,
-        [id]
-      );
-      return rows[0];
-    } catch (err) {
-      throw err;
-    }
-  }
+  createProduct: (productData) => {
+    const { name, description, category_id, brand_id, price, status, images } =
+      productData;
+    return db.query(
+      "INSERT INTO products (name, description, category_id, brand_id, price, status, images) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [name, description, category_id, brand_id, price, status, images]
+    );
+  },
 
-  static async createProduct(product) {
-    try {
-      const [result] = await db.execute(
-        `INSERT INTO product (name, description, category_id, price, discount, stock, image_url, images) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          product.name,
-          product.description,
-          product.category_id,
-          product.price,
-          product.discount,
-          product.stock,
-          product.image_url,
-          product.images,
-        ]
-      );
-      return result.insertId;
-    } catch (err) {
-      throw err;
-    }
-  }
+  updateProduct: (id, productData) => {
+    const { name, description, category_id, brand_id, price, status, images } =
+      productData;
+    return db.query(
+      "UPDATE products SET name = ?, description = ?, category_id = ?, brand_id = ?, price = ?, status = ?, images = ?, updated_at = NOW() WHERE product_id = ?",
+      [name, description, category_id, brand_id, price, status, images, id]
+    );
+  },
 
-  static async updateProduct(id, product) {
-    try {
-      const [result] = await db.execute(
-        `UPDATE product SET name = ?, description = ?, category_id = ?, price = ?, discount = ?, stock = ?, image_url = ?, images = ?, updated_at = CURRENT_TIMESTAMP WHERE product_id = ?`,
-        [
-          product.name,
-          product.description,
-          product.category_id,
-          product.price,
-          product.discount,
-          product.stock,
-          product.image_url,
-          product.images,
-          id,
-        ]
-      );
-      return result.affectedRows;
-    } catch (err) {
-      throw err;
-    }
-  }
+  deleteProduct: (id) => {
+    return db.query("DELETE FROM products WHERE product_id = ?", [id]);
+  },
 
-  static async deleteProduct(id) {
-    try {
-      const [result] = await db.execute(
-        `DELETE FROM products WHERE product_id = ?`,
-        [id]
-      );
-      return result.affectedRows;
-    } catch (err) {
-      throw err;
+  searchProducts: (searchParams) => {
+    const { id, catid, brandid, limit, offset } = searchParams;
+    let query = `SELECT p.*, c.name AS category_name, c.slug AS category_slug, b.name AS brand_name, b.slug AS brand_slug
+                 FROM products p
+                 LEFT JOIN categories c ON p.category_id = c.category_id
+                 LEFT JOIN brands b ON p.brand_id = b.brand_id
+                 WHERE 1=1`;
+    const params = [];
+
+    if (id) {
+      query += " AND p.product_id = ?";
+      params.push(id);
     }
-  }
-}
+    if (catid) {
+      query += " AND p.category_id = ?";
+      params.push(catid);
+    }
+    if (brandid) {
+      query += " AND p.brand_id = ?";
+      params.push(brandid);
+    }
+    query += " LIMIT ? OFFSET ?";
+    params.push(limit, offset);
+
+    return db.query(query, params);
+  },
+
+  getProductVariants: (productId) => {
+    return db.query("SELECT * FROM variants WHERE product_id = ?", [productId]);
+  },
+};
 
 module.exports = Product;
