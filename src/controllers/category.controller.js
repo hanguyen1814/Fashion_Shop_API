@@ -72,6 +72,58 @@ const CategoryController = {
               slug: cat.parent_category_slug,
             }
           : null,
+        children: results
+          .filter((child) => child.child_category_id)
+          .map((child) => ({
+            category_id: child.child_category_id,
+            name: child.child_category_name,
+            slug: child.child_category_slug,
+          })),
+      };
+      res.json(category);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  getCategoryBySlug: async (req, res) => {
+    const { slug } = req.params;
+    try {
+      const [results] = await Category.getCategoryBySlug(slug);
+      if (results.length === 0)
+        return res.status(404).json({ message: "Category not found" });
+
+      const cat = results[0];
+      const category = {
+        category_id: cat.category_id,
+        name: cat.name,
+        slug: cat.slug,
+        description: cat.description,
+        parent_id: cat.parent_id,
+        status: cat.status,
+        image: cat.image,
+        brand: cat.brand_id
+          ? {
+              brand_id: cat.brand_id,
+              name: cat.brand_name,
+              slug: cat.brand_slug,
+              logo: cat.brand_logo,
+            }
+          : null,
+        parent_category: cat.parent_category_id
+          ? {
+              category_id: cat.parent_category_id,
+              name: cat.parent_category_name,
+              slug: cat.parent_category_slug,
+            }
+          : null,
+        children: results
+          .filter((child) => child.child_category_id)
+          .map((child) => ({
+            category_id: child.child_category_id,
+            name: child.child_category_name,
+            slug: child.child_category_slug,
+          })),
       };
       res.json(category);
     } catch (err) {

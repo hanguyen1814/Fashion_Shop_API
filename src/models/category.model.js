@@ -15,12 +15,28 @@ const Category = {
   getCategoryById: (id) => {
     return db.query(
       `SELECT c.*, b.name AS brand_name, b.slug AS brand_slug, b.logo AS brand_logo,
-              pc.category_id AS parent_category_id, pc.name AS parent_category_name, pc.slug AS parent_category_slug
+              pc.category_id AS parent_category_id, pc.name AS parent_category_name, pc.slug AS parent_category_slug,
+              cc.category_id AS child_category_id, cc.name AS child_category_name, cc.slug AS child_category_slug
        FROM categories c
        LEFT JOIN brands b ON c.brand_id = b.brand_id
        LEFT JOIN categories pc ON c.parent_id = pc.category_id
+       LEFT JOIN categories cc ON cc.parent_id = c.category_id
        WHERE c.category_id = ?`,
       [id]
+    );
+  },
+
+  getCategoryBySlug: (slug) => {
+    return db.query(
+      `SELECT c.*, b.name AS brand_name, b.slug AS brand_slug, b.logo AS brand_logo,
+              pc.category_id AS parent_category_id, pc.name AS parent_category_name, pc.slug AS parent_category_slug,
+              cc.category_id AS child_category_id, cc.name AS child_category_name, cc.slug AS child_category_slug
+       FROM categories c
+       LEFT JOIN brands b ON c.brand_id = b.brand_id
+       LEFT JOIN categories pc ON c.parent_id = pc.category_id
+       LEFT JOIN categories cc ON cc.parent_id = c.category_id
+       WHERE c.slug = ?`,
+      [slug]
     );
   },
 
