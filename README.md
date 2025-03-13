@@ -26,6 +26,23 @@ curl -X GET "https://fshop.nghienshopping.online/api/products/getall"
 curl -X GET "https://fshop.nghienshopping.online/api/products/getid/1"
 ```
 
+## Get Products By Category
+
+- **URL:** `/api/products/getcat/:category`
+- **Method:** `GET`
+- **Description:** Retrieve products by category ID.
+- **URL Params:**
+  - `category` (required): The category ID.
+- **Query Params:**
+  - `page` (optional): The page number for pagination.
+  - `limit` (optional): The number of products to return per page.
+
+### Curl Command
+
+```sh
+curl -X GET "https://fshop.nghienshopping.online/api/products/getcat/1?page=1&limit=10"
+```
+
 ## Create Product
 
 - **URL:** `/api/products/create`
