@@ -1,142 +1,83 @@
 const Product = require("../models/product.model");
+const Category = require("../models/category.model");
 
-const formatProduct = (product, variants = []) => ({
-  product_id: product.product_id,
-  category_id: product.category_id,
-  brand_id: product.brand_id,
-  name: product.name,
-  description: product.description,
-  price: product.price,
-  origin_price: product.origin_price,
-  discount: product.discount,
-  stock: product.stock,
-  has_variants: product.has_variants,
-  sold: product.sold,
-  image: product.image,
-  images: product.images,
-  status: product.status,
-  created_at: product.created_at,
-  updated_at: product.updated_at,
-  category: {
-    name: product.category_name,
-    slug: product.category_slug,
-  },
-  brand: {
-    name: product.brand_name,
-    slug: product.brand_slug,
-  },
-  variants: product.has_variants ? variants : [],
-});
-
-const ProductController = {
+const productController = {
   getAllProducts: async (req, res) => {
+    const { page = 1, limit = 10 } = req.query;
     try {
-      const [results] = await Product.getAllProducts();
-      res.json(results.map(formatProduct));
+      const products = await Product.getAll(parseInt(page), parseInt(limit));
+      res.status(200).json(products);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   },
+  getProductsByCategory: async (req, res) => {
+    const { category } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+    const catInfo = await Category.getById(category);
 
+    try {
+      const products = await Product.getByCatId(
+        category,
+        parseInt(page),
+        parseInt(limit)
+      );
+      res.status(200).json({ category: catInfo.cat_tree, products });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
   getProductById: async (req, res) => {
     const { id } = req.params;
     try {
-      const [results] = await Product.getProductById(id);
-      if (results.length === 0)
-        return res.status(404).json({ message: "Product not found" });
-
-      const product = results[0];
-      let variants = [];
-      if (product.has_variants) {
-        const [variantResults] = await Product.getProductVariants(id);
-        variants = variantResults;
+      const product = await Product.getById(id);
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
       }
-      res.json(formatProduct(product, variants));
+      const cat_id = product.category_id;
+      const category = await Category.getById(cat_id);
+      res.status(200).json({ category: category.cat_tree, product });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   },
-
   createProduct: async (req, res) => {
-    const { name, description, category_id, brand_id, price, status, images } =
-      req.body;
+    const newProduct = req.body;
     try {
-      await Product.createProduct({
-        name,
-        description,
-        category_id,
-        brand_id,
-        price,
-        status,
-        images,
-      });
-      res.status(201).json({ message: "Product created successfully" });
+      const createdProduct = await Product.create(newProduct);
+      if (!createdProduct.status) {
+        return res.status(400).json({ error: createdProduct.error });
+      }
+      res.status(201).json(createdProduct);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   },
-
   updateProduct: async (req, res) => {
     const { id } = req.params;
-    const { name, description, category_id, brand_id, price, status, images } =
-      req.body;
+    const updatedProduct = req.body;
     try {
-      await Product.updateProduct(id, {
-        name,
-        description,
-        category_id,
-        brand_id,
-        price,
-        status,
-        images,
-      });
-      res.json({ message: "Product updated successfully" });
+      const result = await Product.update(id, updatedProduct);
+      if (!result.status) {
+        return res.status(400).json({ error: result.error });
+      }
+      res.status(200).json(result);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   },
-
   deleteProduct: async (req, res) => {
     const { id } = req.params;
     try {
-      await Product.deleteProduct(id);
-      res.json({ message: "Product deleted successfully" });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  },
-
-  searchProducts: async (req, res) => {
-    const { id, catid, brandid, limit = 10, page = 1 } = req.query;
-    const offset = (page - 1) * limit;
-
-    try {
-      const [results] = await Product.searchProducts({
-        id,
-        catid,
-        brandid,
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-      });
-
-      const formattedResults = await Promise.all(
-        results.map(async (product) => {
-          let variants = [];
-          if (product.has_variants) {
-            const [variantResults] = await Product.getProductVariants(
-              product.product_id
-            );
-            variants = variantResults;
-          }
-          return formatProduct(product, variants);
-        })
-      );
-
-      res.json(formattedResults);
+      const result = await Product.delete(id);
+      if (!result.status) {
+        return res.status(400).json({ error: result.error });
+      }
+      res.status(200).json(result);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   },
 };
 
-module.exports = ProductController;
+module.exports = productController;

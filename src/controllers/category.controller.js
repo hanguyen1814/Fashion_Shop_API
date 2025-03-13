@@ -1,41 +1,15 @@
 const Category = require("../models/category.model");
+const Product = require("../models/product.model");
 
 const CategoryController = {
   getAllCategories: async (req, res) => {
     try {
-      const [results] = await Category.getAllCategoriesWithBrands();
-      const buildCategoryTree = (categories, parentId = null) => {
-        return categories
-          .filter((cat) => cat.parent_id === parentId)
-          .map((cat) => ({
-            category_id: cat.category_id,
-            name: cat.name,
-            slug: cat.slug,
-            description: cat.description,
-            parent_id: cat.parent_id,
-            status: cat.status,
-            image: cat.image,
-            brand: cat.brand_id
-              ? {
-                  brand_id: cat.brand_id,
-                  name: cat.brand_name,
-                  slug: cat.brand_slug,
-                  logo: cat.brand_logo,
-                }
-              : null,
-            parent_category: cat.parent_category_id
-              ? {
-                  category_id: cat.parent_category_id,
-                  name: cat.parent_category_name,
-                  slug: cat.parent_category_slug,
-                }
-              : null,
-            children: buildCategoryTree(categories, cat.category_id),
-          }));
-      };
-
-      const categoryTree = buildCategoryTree(results);
-      res.json(categoryTree);
+      const categories = await Category.getAllCat();
+      for (const category of categories) {
+        const products = await Product.getByCatId(category.id);
+        category.products = products;
+      }
+      res.json(categories);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -44,43 +18,12 @@ const CategoryController = {
   getCategoryById: async (req, res) => {
     const { id } = req.params;
     try {
-      const [results] = await Category.getCategoryById(id);
-      if (results.length === 0)
+      const result = await Category.getById(id);
+      if (!result)
         return res.status(404).json({ message: "Category not found" });
-
-      const cat = results[0];
-      const category = {
-        category_id: cat.category_id,
-        name: cat.name,
-        slug: cat.slug,
-        description: cat.description,
-        parent_id: cat.parent_id,
-        status: cat.status,
-        image: cat.image,
-        brand: cat.brand_id
-          ? {
-              brand_id: cat.brand_id,
-              name: cat.brand_name,
-              slug: cat.brand_slug,
-              logo: cat.brand_logo,
-            }
-          : null,
-        parent_category: cat.parent_category_id
-          ? {
-              category_id: cat.parent_category_id,
-              name: cat.parent_category_name,
-              slug: cat.parent_category_slug,
-            }
-          : null,
-        children: results
-          .filter((child) => child.child_category_id)
-          .map((child) => ({
-            category_id: child.child_category_id,
-            name: child.child_category_name,
-            slug: child.child_category_slug,
-          })),
-      };
-      res.json(category);
+      const products = await Product.getByCatId(id, 1, 10);
+      result.products = products;
+      res.json(result);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -89,43 +32,12 @@ const CategoryController = {
   getCategoryBySlug: async (req, res) => {
     const { slug } = req.params;
     try {
-      const [results] = await Category.getCategoryBySlug(slug);
-      if (results.length === 0)
+      const result = await Category.getBySlug(slug);
+      if (!result)
         return res.status(404).json({ message: "Category not found" });
-
-      const cat = results[0];
-      const category = {
-        category_id: cat.category_id,
-        name: cat.name,
-        slug: cat.slug,
-        description: cat.description,
-        parent_id: cat.parent_id,
-        status: cat.status,
-        image: cat.image,
-        brand: cat.brand_id
-          ? {
-              brand_id: cat.brand_id,
-              name: cat.brand_name,
-              slug: cat.brand_slug,
-              logo: cat.brand_logo,
-            }
-          : null,
-        parent_category: cat.parent_category_id
-          ? {
-              category_id: cat.parent_category_id,
-              name: cat.parent_category_name,
-              slug: cat.parent_category_slug,
-            }
-          : null,
-        children: results
-          .filter((child) => child.child_category_id)
-          .map((child) => ({
-            category_id: child.child_category_id,
-            name: child.child_category_name,
-            slug: child.child_category_slug,
-          })),
-      };
-      res.json(category);
+      const products = await Product.getByCatId(result.id);
+      result.products = products;
+      res.json(result);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
