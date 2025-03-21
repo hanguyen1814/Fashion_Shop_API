@@ -59,6 +59,8 @@ const UserController = {
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
+      console.log(users[0]);
+
       const user = users[0];
       const isValidPassword = await bcrypt.compare(
         password,
