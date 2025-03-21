@@ -338,3 +338,173 @@ curl -X PUT "https://fshop.nghienshopping.online/api/users/update/1" -H "Content
 ```sh
 curl -X DELETE "https://fshop.nghienshopping.online/api/users/delete/1"
 ```
+
+# Cart API Endpoints
+
+## Get Cart by User ID
+
+- **URL:** `/api/cart/get`
+- **Method:** `GET`
+- **Description:** Retrieve the cart items for a specific user.
+- **Query Params:**
+  - `user_id` (required): The ID of the user.
+
+### Curl Command
+
+```sh
+curl -X GET "https://fshop.nghienshopping.online/api/cart/get?user_id=1"
+```
+
+## Add to Cart
+
+- **URL:** `/api/cart/add`
+- **Method:** `POST`
+- **Description:** Add a product to the cart or update the quantity if it already exists.
+- **Query Params:**
+  - `user_id` (required): The ID of the user.
+- **Body Params:**
+  - `productId` (required): The ID of the product.
+  - `variantId` (required): The ID of the product variant.
+  - `quantity` (required): The quantity to add.
+
+### Curl Command
+
+```sh
+curl -X POST "https://fshop.nghienshopping.online/api/cart/add?user_id=1" -H "Content-Type: application/json" -d '{
+  "productId": 1,
+  "variantId": 1,
+  "quantity": 2
+}'
+```
+
+## Update Cart Item
+
+- **URL:** `/api/cart/update`
+- **Method:** `PUT`
+- **Description:** Update the quantity of a specific cart item.
+- **Query Params:**
+  - `user_id` (required): The ID of the user.
+- **Body Params:**
+  - `cartId` (required): The ID of the cart item.
+  - `quantity` (required): The new quantity.
+
+### Curl Command
+
+```sh
+curl -X PUT "https://fshop.nghienshopping.online/api/cart/update?user_id=1" -H "Content-Type: application/json" -d '{
+  "cartId": 1,
+  "quantity": 3
+}'
+```
+
+## Delete Cart Item
+
+- **URL:** `/api/cart/delete`
+- **Method:** `DELETE`
+- **Description:** Remove a specific item from the cart.
+- **Query Params:**
+  - `user_id` (required): The ID of the user.
+  - `cart_id` (required): The ID of the cart item.
+
+### Curl Command
+
+```sh
+curl -X DELETE "https://fshop.nghienshopping.online/api/cart/delete?user_id=1&cart_id=1"
+```
+
+## Clear Cart
+
+- **URL:** `/api/cart/clear`
+- **Method:** `DELETE`
+- **Description:** Remove all items from the user's cart.
+- **Query Params:**
+  - `user_id` (required): The ID of the user.
+
+### Curl Command
+
+```sh
+curl -X DELETE "https://fshop.nghienshopping.online/api/cart/clear?user_id=1"
+```
+
+# Order API Endpoints
+
+## Create Order
+
+- **URL:** `/api/orders`
+- **Method:** `POST`
+- **Description:** Create a new order.
+- **Body Params:**
+  - `user_id` (required): The ID of the user.
+  - `recipient_name` (required): The name of the recipient.
+  - `recipient_phone` (required): The phone number of the recipient.
+  - `shipping_address` (required): The shipping address.
+  - `total_price` (required): The total price of the order.
+  - `shipping_fee` (required): The shipping fee.
+  - `discount` (required): The discount applied to the order.
+  - `amount_paid` (required): The amount paid.
+  - `payment_method` (required): The payment method.
+  - `shipping_method` (required): The shipping method.
+  - `items` (required): An array of order items, each containing:
+    - `product_id` (required): The ID of the product.
+    - `variant_id` (required): The ID of the product variant.
+    - `quantity` (required): The quantity of the product.
+    - `unit_price` (required): The unit price of the product.
+    - `discount` (required): The discount applied to the product.
+    - `tax` (required): The tax applied to the product.
+    - `subtotal` (required): The subtotal for the product.
+
+### Curl Command
+
+```sh
+curl -X POST "https://fshop.nghienshopping.online/api/orders" -H "Content-Type: application/json" -d '{
+  "user_id": 1,
+  "recipient_name": "John Doe",
+  "recipient_phone": "123456789",
+  "shipping_address": "123 Main Street",
+  "total_price": 100.00,
+  "shipping_fee": 10.00,
+  "discount": 5.00,
+  "amount_paid": 105.00,
+  "payment_method": "credit_card",
+  "shipping_method": "standard",
+  "items": [
+    {
+      "product_id": 1,
+      "variant_id": 1,
+      "quantity": 2,
+      "unit_price": 50.00,
+      "discount": 0.00,
+      "tax": 5.00,
+      "subtotal": 100.00
+    }
+  ]
+}'
+```
+
+## Get Order by ID
+
+- **URL:** `/api/orders/:orderId`
+- **Method:** `GET`
+- **Description:** Retrieve the details of a specific order.
+- **URL Params:**
+  - `orderId` (required): The ID of the order.
+
+### Curl Command
+
+```sh
+curl -X GET "https://fshop.nghienshopping.online/api/orders/1"
+```
+
+## Cancel Order
+
+- **URL:** `/api/orders/:orderId/cancel`
+- **Method:** `PUT`
+- **Description:** Cancel a specific order.
+- **URL Params:**
+  - `orderId` (required): The ID of the order.
+
+### Curl Command
+
+```sh
+curl -X PUT "https://fshop.nghienshopping.online/api/orders/1/cancel"
+```
