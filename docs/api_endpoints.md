@@ -1,323 +1,1440 @@
-# Product API Endpoints
+## I. Người dùng
 
-## Get All Products
+### 1. Đăng ký người dùng
 
-- **URL:** `/api/products/getall`
-- **Method:** `GET`
-- **Description:** Retrieve all products.
+- **[POST]** `/api/users/register`
 
-### Curl Command
+#### Body Request
 
-```sh
-curl -X GET "http://localhost:5000/api/products/getall"
+```json
+{
+  "full_name": "Nguyen Van A",
+  "email": "vana@example.com",
+  "password": "123456",
+  "phone": "0123456789",
+  "address": "Hanoi"
+}
 ```
 
-## Get Product By ID
+#### Response
 
-- **URL:** `/api/products/getid/:id`
-- **Method:** `GET`
-- **Description:** Retrieve a product by its ID.
-- **URL Params:**
-  - `id` (required): The ID of the product.
-
-### Curl Command
-
-```sh
-curl -X GET "http://localhost:5000/api/products/getid/1"
+```json
+{
+  "status": true,
+  "message": "User registered successfully"
+}
 ```
 
-## Create Product
+#### cURL
 
-- **URL:** `/api/products/create`
-- **Method:** `POST`
-- **Description:** Create a new product.
-- **Body Params:**
-  - `name` (required): The name of the product.
-  - `description` (required): The description of the product.
-  - `category_id` (required): The category ID of the product.
-  - `brand_id` (required): The brand ID of the product.
-  - `price` (required): The price of the product.
-  - `status` (required): The status of the product.
-  - `images` (optional): The images of the product.
-
-### Curl Command
-
-```sh
-curl -X POST "http://localhost:5000/api/products/create" -H "Content-Type: application/json" -d '{
-  "name": "Product Name",
-  "description": "Product Description",
-  "category_id": 1,
-  "brand_id": 1,
-  "price": 100,
-  "status": "available",
-  "images": "image1.jpg,image2.jpg"
-}'
+```bash
+curl -X POST http://localhost:3000/api/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "full_name": "Nguyen Van A",
+    "email": "vana@example.com",
+    "password": "123456",
+    "phone": "0123456789",
+    "address": "Hanoi"
+  }'
 ```
 
-## Update Product
+---
 
-- **URL:** `/api/products/update/:id`
-- **Method:** `PUT`
-- **Description:** Update an existing product.
-- **URL Params:**
-  - `id` (required): The ID of the product.
-- **Body Params:**
-  - `name` (required): The name of the product.
-  - `description` (required): The description of the product.
-  - `category_id` (required): The category ID of the product.
-  - `brand_id` (required): The brand ID of the product.
-  - `price` (required): The price of the product.
-  - `status` (required): The status of the product.
-  - `images` (optional): The images of the product.
+### 2. Đăng nhập
 
-### Curl Command
+- **[POST]** `/api/users/login`
 
-```sh
-curl -X PUT "http://localhost:5000/api/products/update/1" -H "Content-Type: application/json" -d '{
-  "name": "Updated Product Name",
-  "description": "Updated Product Description",
-  "category_id": 1,
-  "brand_id": 1,
-  "price": 150,
-  "status": "available",
-  "images": "image1.jpg,image2.jpg"
-}'
+#### Body Request
+
+```json
+{
+  "email": "vana@example.com",
+  "password": "123456"
+}
 ```
 
-## Delete Product
+#### Response
 
-- **URL:** `/api/products/delete/:id`
-- **Method:** `DELETE`
-- **Description:** Delete a product by its ID.
-- **URL Params:**
-  - `id` (required): The ID of the product.
-
-### Curl Command
-
-```sh
-curl -X DELETE "http://localhost:5000/api/products/delete/1"
+```json
+{
+  "status": true,
+  "message": "Login successful",
+  "token": "<token>"
+}
 ```
 
-## Search Products
+#### cURL
 
-- **URL:** `/api/products/search`
-- **Method:** `GET`
-- **Description:** Search for products based on various parameters.
-- **Query Params:**
-  - `id` (optional): The ID of the product.
-  - `catid` (optional): The category ID of the product.
-  - `brandid` (optional): The brand ID of the product.
-  - `limit` (optional): The number of products to return.
-  - `page` (optional): The page number for pagination.
-
-### Curl Command
-
-```sh
-curl -X GET "http://localhost:5000/api/products/search?catid=1&limit=10&page=1"
+```bash
+curl -X POST http://localhost:3000/api/users/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "vana@example.com",
+    "password": "123456"
+  }'
 ```
 
-# Category API Endpoints
+---
 
-## Get All Categories
+### 3. Lấy thông tin cá nhân
 
-- **URL:** `/api/cat/getall`
-- **Method:** `GET`
-- **Description:** Retrieve all categories.
+- **[GET]** `/api/users/me`
+- **Header**: `Authorization: Bearer <token>`
 
-### Curl Command
+#### Response
 
-```sh
-curl -X GET "http://localhost:5000/api/cat/getall"
+```json
+{
+  "status": true,
+  "data": {
+    "user_id": 1,
+    "full_name": "Nguyen Van A",
+    "email": "vana@example.com",
+    "phone": "0123456789",
+    "address": "Hanoi",
+    "role": "user",
+    "status": "active",
+    "created_at": "2025-03-21T10:00:00.000Z"
+  }
+}
 ```
 
-## Get Category By ID
+#### cURL
 
-- **URL:** `/api/cat/getid/:id`
-- **Method:** `GET`
-- **Description:** Retrieve a category by its ID.
-- **URL Params:**
-  - `id` (required): The ID of the category.
-
-### Curl Command
-
-```sh
-curl -X GET "http://localhost:5000/api/cat/getid/1"
+```bash
+curl -X GET http://localhost:3000/api/users/me \
+  -H "Authorization: Bearer <your_token_here>"
 ```
 
-## Create Category
+---
 
-- **URL:** `/api/cat/create`
-- **Method:** `POST`
-- **Description:** Create a new category.
-- **Body Params:**
-  - `name` (required): The name of the category.
-  - `slug` (required): The slug of the category.
-  - `description` (optional): The description of the category.
-  - `parent_id` (optional): The parent category ID.
-  - `brand_id` (optional): The brand ID associated with the category.
-  - `status` (required): The status of the category.
-  - `image` (optional): The image of the category.
+### 4. Lấy danh sách người dùng (Admin)
 
-### Curl Command
+- **[GET]** `/api/users`
+- **Header**: `Authorization: Bearer <admin_token>`
 
-```sh
-curl -X POST "http://localhost:5000/api/cat/create" -H "Content-Type: application/json" -d '{
-  "name": "Category Name",
-  "slug": "category-slug",
-  "description": "Category Description",
-  "parent_id": 1,
+#### Response
+
+```json
+{
+  "status": true,
+  "data": [
+    {
+      "user_id": 1,
+      "full_name": "Nguyen Van A",
+      "email": "vana@example.com",
+      "phone": "0123456789",
+      "address": "Hanoi",
+      "role": "user",
+      "status": "active",
+      "created_at": "2025-03-21T10:00:00.000Z"
+    },
+    {
+      "user_id": 2,
+      "full_name": "Admin",
+      "email": "admin@example.com",
+      "phone": "0987654321",
+      "address": "Saigon",
+      "role": "admin",
+      "status": "active",
+      "created_at": "2025-03-20T09:00:00.000Z"
+    }
+  ]
+}
+```
+
+#### cURL
+
+```bash
+curl -X GET http://localhost:3000/api/users \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+---
+
+### 5. Lấy người dùng theo ID
+
+- **[GET]** `/api/users/:user_id`
+- **Header**: `Authorization: Bearer <token>`
+
+#### Response
+
+```json
+{
+  "status": true,
+  "data": {
+    "user_id": 1,
+    "full_name": "Nguyen Van A",
+    "email": "vana@example.com",
+    "phone": "0123456789",
+    "address": "Hanoi",
+    "role": "user",
+    "status": "active",
+    "created_at": "2025-03-21T10:00:00.000Z"
+  }
+}
+```
+
+#### cURL
+
+```bash
+curl -X GET http://localhost:3000/api/users/1 \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
+### 6. Cập nhật thông tin người dùng
+
+- **[PUT]** `/api/users/:user_id`
+- **Header**: `Authorization: Bearer <token>`
+
+#### Body Request
+
+```json
+{
+  "full_name": "Nguyen Van B",
+  "phone": "0999999999",
+  "address": "Ho Chi Minh"
+}
+```
+
+#### Response
+
+```json
+{
+  "status": true,
+  "message": "User updated successfully"
+}
+```
+
+#### cURL
+
+```bash
+curl -X PUT http://localhost:3000/api/users/1 \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "full_name": "Nguyen Van B",
+    "phone": "0999999999",
+    "address": "Ho Chi Minh"
+  }'
+```
+
+---
+
+### 7. Đổi mật khẩu
+
+- **[PUT]** `/api/users/:user_id/password`
+- **Header**: `Authorization: Bearer <token>`
+
+#### Body Request
+
+```json
+{
+  "oldPass": "123456",
+  "newPass": "654321"
+}
+```
+
+#### Response
+
+```json
+{
+  "status": true,
+  "message": "Password updated successfully"
+}
+```
+
+#### cURL
+
+```bash
+curl -X PUT http://localhost:3000/api/users/1/password \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "oldPass": "123456",
+    "newPass": "654321"
+  }'
+```
+
+---
+
+### 8. Xóa người dùng (Admin)
+
+- **[DELETE]** `/api/users/:id`
+- **Header**: `Authorization: Bearer <admin_token>`
+
+#### Response
+
+```json
+{
+  "status": true,
+  "message": "User deleted successfully"
+}
+```
+
+#### cURL
+
+```bash
+curl -X DELETE http://localhost:3000/api/users/1 \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+---
+
+## II. Danh mục (Categories)
+
+### 1. Lấy tất cả danh mục (dạng cây)
+
+- **[GET]** `/api/cat`
+
+#### Response
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "category_id": 1,
+      "name": "Thời trang nam",
+      "slug": "thoi-trang-nam",
+      "description": "Áo quần nam",
+      "parent_id": null,
+      "brand_id": 1,
+      "status": "active",
+      "image": "https://example.com/img1.jpg",
+      "children": [
+        {
+          "category_id": 2,
+          "name": "Áo sơ mi",
+          "slug": "ao-so-mi",
+          ...
+        }
+      ],
+      "products": [ ... ]
+    }
+  ]
+}
+```
+
+#### cURL
+
+```bash
+curl -X GET http://localhost:3000/api/cat
+```
+
+---
+
+### 2. Lấy danh mục theo ID
+
+- **[GET]** `/api/cat/:id`
+
+#### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "category_id": 1,
+    "name": "Thời trang nam",
+    "slug": "thoi-trang-nam",
+    "description": "Áo quần nam",
+    "parent_id": null,
+    "brand_id": 1,
+    "status": "active",
+    "image": "https://example.com/img1.jpg",
+    "children": [ ... ],
+    "cat_tree": [ ... ],
+    "products": [ ... ]
+  }
+}
+```
+
+#### cURL
+
+```bash
+curl -X GET http://localhost:3000/api/cat/1
+```
+
+---
+
+### 3. Lấy danh mục theo slug
+
+- **[GET]** `/api/cat/slug/:slug`
+
+#### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "category_id": 1,
+    "name": "Thời trang nam",
+    "slug": "thoi-trang-nam",
+    "description": "Áo quần nam",
+    "parent_id": null,
+    "brand_id": 1,
+    "status": "active",
+    "image": "https://example.com/img1.jpg",
+    "products": [ ... ]
+  }
+}
+```
+
+#### cURL
+
+```bash
+curl -X GET http://localhost:3000/api/cat/slug/thoi-trang-nam
+```
+
+---
+
+### 4. Tạo danh mục mới (Admin)
+
+- **[POST]** `/api/cat`
+- **Header**: `Authorization: Bearer <admin_token>`
+
+#### Body Request
+
+```json
+{
+  "name": "Phụ kiện",
+  "slug": "phu-kien",
+  "description": "Các loại phụ kiện thời trang",
+  "parent_id": null,
   "brand_id": 1,
   "status": "active",
-  "image": "image.jpg"
-}'
+  "image": "https://example.com/img.jpg"
+}
 ```
 
-## Update Category
+#### Response
 
-- **URL:** `/api/cat/update/:id`
-- **Method:** `PUT`
-- **Description:** Update an existing category.
-- **URL Params:**
-  - `id` (required): The ID of the category.
-- **Body Params:**
-  - `name` (required): The name of the category.
-  - `slug` (required): The slug of the category.
-  - `description` (optional): The description of the category.
-  - `parent_id` (optional): The parent category ID.
-  - `brand_id` (optional): The brand ID associated with the category.
-  - `status` (required): The status of the category.
-  - `image` (optional): The image of the category.
+```json
+{
+  "success": true,
+  "message": "Category created successfully"
+}
+```
 
-### Curl Command
+#### cURL
 
-```sh
-curl -X PUT "http://localhost:5000/api/cat/update/1" -H "Content-Type: application/json" -d '{
-  "name": "Updated Category Name",
-  "slug": "updated-category-slug",
-  "description": "Updated Category Description",
-  "parent_id": 1,
-  "brand_id": 1,
+```bash
+curl -X POST http://localhost:3000/api/cat \
+  -H "Authorization: Bearer <admin_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Phụ kiện",
+    "slug": "phu-kien",
+    "description": "Các loại phụ kiện thời trang",
+    "parent_id": null,
+    "brand_id": 1,
+    "status": "active",
+    "image": "https://example.com/img.jpg"
+  }'
+```
+
+---
+
+### 5. Cập nhật danh mục (Admin)
+
+- **[PUT]** `/api/cat/:id`
+- **Header**: `Authorization: Bearer <admin_token>`
+
+#### Body Request
+
+```json
+{
+  "name": "Phụ kiện nữ",
+  "slug": "phu-kien-nu",
+  "description": "Túi, dây chuyền...",
+  "parent_id": null,
+  "brand_id": 2,
   "status": "active",
-  "image": "updated-image.jpg"
-}'
+  "image": "https://example.com/new-img.jpg"
+}
 ```
 
-## Delete Category
+#### Response
 
-- **URL:** `/api/cat/delete/:id`
-- **Method:** `DELETE`
-- **Description:** Delete a category by its ID.
-- **URL Params:**
-  - `id` (required): The ID of the category.
-
-### Curl Command
-
-```sh
-curl -X DELETE "http://localhost:5000/api/cat/delete/1"
+```json
+{
+  "success": true,
+  "message": "Category updated successfully"
+}
 ```
 
-# User API Endpoints
+#### cURL
 
-## Get All Users
-
-- **URL:** `/api/users/getall`
-- **Method:** `GET`
-- **Description:** Retrieve all users.
-
-### Curl Command
-
-```sh
-curl -X GET "http://localhost:5000/api/users/getall"
+```bash
+curl -X PUT http://localhost:3000/api/cat/3 \
+  -H "Authorization: Bearer <admin_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Phụ kiện nữ",
+    "slug": "phu-kien-nu",
+    "description": "Túi, dây chuyền...",
+    "parent_id": null,
+    "brand_id": 2,
+    "status": "active",
+    "image": "https://example.com/new-img.jpg"
+  }'
 ```
 
-## Get User By ID
+---
 
-- **URL:** `/api/users/getid/:id`
-- **Method:** `GET`
-- **Description:** Retrieve a user by their ID.
-- **URL Params:**
-  - `id` (required): The ID of the user.
+### 6. Xoá danh mục (Admin)
 
-### Curl Command
+- **[DELETE]** `/api/cat/:id`
+- **Header**: `Authorization: Bearer <admin_token>`
 
-```sh
-curl -X GET "http://localhost:5000/api/users/getid/1"
+#### Response
+
+```json
+{
+  "success": true,
+  "message": "Category deleted successfully"
+}
 ```
 
-## Register User
+#### cURL
 
-- **URL:** `/api/users/register`
-- **Method:** `POST`
-- **Description:** Register a new user.
-- **Body Params:**
-  - `full_name` (required): The full name of the user.
-  - `email` (required): The email of the user.
-  - `password` (required): The password of the user.
-  - `phone` (required): The phone number of the user.
-  - `address` (required): The address of the user.
-
-### Curl Command
-
-```sh
-curl -X POST "http://localhost:5000/api/users/register" -H "Content-Type: application/json" -d '{
-  "full_name": "User Name",
-  "email": "user@example.com",
-  "password": "password123",
-  "phone": "1234567890",
-  "address": "123 Street, City, Country"
-}'
+```bash
+curl -X DELETE http://localhost:3000/api/cat/3 \
+  -H "Authorization: Bearer <admin_token>"
 ```
 
-## Login User
+---
 
-- **URL:** `/api/users/login`
-- **Method:** `POST`
-- **Description:** Login a user.
-- **Body Params:**
-  - `email` (required): The email of the user.
-  - `password` (required): The password of the user.
+## III. Sản phẩm (Products)
 
-### Curl Command
+### 1. Lấy danh sách sản phẩm
 
-```sh
-curl -X POST "http://localhost:5000/api/users/login" -H "Content-Type: application/json" -d '{
-  "email": "user@example.com",
-  "password": "password123"
-}'
+- **[GET]** `/api/products?page=1&limit=20`
+
+#### Response
+
+```json
+{
+  "status": true,
+  "data": [
+    {
+      "product_id": 1,
+      "name": "Áo thun",
+      "price": 100000,
+      "origin_price": 120000,
+      "discount": 20000,
+      "stock": 50,
+      "image": "https://example.com/ao.jpg",
+      "variants": [ ... ]
+    }
+  ]
+}
 ```
 
-## Update User
+#### cURL
 
-- **URL:** `/api/users/update/:id`
-- **Method:** `PUT`
-- **Description:** Update an existing user.
-- **URL Params:**
-  - `id` (required): The ID of the user.
-- **Body Params:**
-  - `full_name` (required): The full name of the user.
-  - `phone` (required): The phone number of the user.
-  - `address` (required): The address of the user.
-
-### Curl Command
-
-```sh
-curl -X PUT "http://localhost:5000/api/users/update/1" -H "Content-Type: application/json" -d '{
-  "full_name": "Updated User Name",
-  "phone": "0987654321",
-  "address": "456 Avenue, City, Country"
-}'
+```bash
+curl -X GET "http://localhost:3000/api/products?page=1&limit=20"
 ```
 
-## Delete User
+---
 
-- **URL:** `/api/users/delete/:id`
-- **Method:** `DELETE`
-- **Description:** Delete a user by their ID.
-- **URL Params:**
-  - `id` (required): The ID of the user.
+### 2. Lấy sản phẩm theo ID
 
-### Curl Command
+- **[GET]** `/api/products/:id`
 
-```sh
-curl -X DELETE "http://localhost:5000/api/users/delete/1"
+#### Response
+
+```json
+{
+  "status": true,
+  "data": {
+    "category": [ ... ],
+    "product": {
+      "product_id": 1,
+      "name": "Áo thun",
+      "price": 100000,
+      "stock": 50,
+      "variants": [ ... ]
+    }
+  }
+}
 ```
+
+#### cURL
+
+```bash
+curl -X GET http://localhost:3000/api/products/1
+```
+
+---
+
+### 3. Lấy sản phẩm theo danh mục
+
+- **[GET]** `/api/products/category/:category`
+
+#### Response
+
+```json
+{
+  "status": true,
+  "data": {
+    "category": [ ... ],
+    "products": [ ... ]
+  }
+}
+```
+
+#### cURL
+
+```bash
+curl -X GET http://localhost:3000/api/products/category/2
+```
+
+---
+
+### 4. Tìm kiếm theo tên
+
+- **[GET]** `/api/products/search/name?name=ao`
+
+#### cURL
+
+```bash
+curl -X GET "http://localhost:3000/api/products/search/name?name=ao"
+```
+
+---
+
+### 5. Tìm kiếm theo màu sắc
+
+- **[GET]** `/api/products/search/color?color=den`
+
+#### cURL
+
+```bash
+curl -X GET "http://localhost:3000/api/products/search/color?color=den"
+```
+
+---
+
+### 6. Tìm kiếm theo kích thước
+
+- **[GET]** `/api/products/search/size?size=m`
+
+#### cURL
+
+```bash
+curl -X GET "http://localhost:3000/api/products/search/size?size=m"
+```
+
+---
+
+### 7. Tìm kiếm theo khoảng giá
+
+- **[GET]** `/api/products/search/price?min=100000&max=300000`
+
+#### cURL
+
+```bash
+curl -X GET "http://localhost:3000/api/products/search/price?min=100000&max=300000"
+```
+
+---
+
+### 8. Thêm sản phẩm mới (Admin)
+
+- **[POST]** `/api/products`
+- **Header**: `Authorization: Bearer <admin_token>`
+
+#### Body Request
+
+```json
+{
+  "category_id": 1,
+  "brand_id": 1,
+  "name": "Áo Hoodie",
+  "description": "Áo hoodie nỉ bông",
+  "price": 250000,
+  "origin_price": 300000,
+  "discount": 50000,
+  "stock": 20,
+  "sold": 0,
+  "image": "https://example.com/hoodie.jpg",
+  "images": ["https://example.com/img1.jpg", "https://example.com/img2.jpg"],
+  "variants": [
+    {
+      "color_name": "Đen",
+      "size_name": "M",
+      "price": 250000,
+      "origin_price": 300000,
+      "discount": 50000,
+      "stock": 10,
+      "image": "https://example.com/variant.jpg"
+    }
+  ]
+}
+```
+
+#### Response
+
+```json
+{
+  "status": true,
+  "product_id": 12,
+  "category_id": 1,
+  "name": "Áo Hoodie",
+  ...
+}
+```
+
+#### cURL
+
+```bash
+curl -X POST http://localhost:3000/api/products \
+  -H "Authorization: Bearer <admin_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "category_id": 1,
+    "brand_id": 1,
+    "name": "Áo Hoodie",
+    "description": "Áo hoodie nỉ bông",
+    "price": 250000,
+    "origin_price": 300000,
+    "discount": 50000,
+    "stock": 20,
+    "sold": 0,
+    "image": "https://example.com/hoodie.jpg",
+    "images": ["https://example.com/img1.jpg", "https://example.com/img2.jpg"],
+    "variants": [
+      {
+        "color_name": "Đen",
+        "size_name": "M",
+        "price": 250000,
+        "origin_price": 300000,
+        "discount": 50000,
+        "stock": 10,
+        "image": "https://example.com/variant.jpg"
+      }
+    ]
+  }'
+```
+
+---
+
+### 9. Cập nhật sản phẩm (Admin)
+
+- **[PUT]** `/api/products/:id`
+- **Header**: `Authorization: Bearer <admin_token>`
+
+#### Body Request
+
+```json
+{
+  "category_id": 1,
+  "brand_id": 2,
+  "name": "Áo khoác dạ",
+  "description": "Áo khoác mùa đông",
+  "price": 450000,
+  "origin_price": 500000,
+  "discount": 50000,
+  "stock": 5,
+  "image": "https://example.com/khoac.jpg",
+  "images": ["https://example.com/k1.jpg"]
+}
+```
+
+#### Response
+
+```json
+{
+  "status": true,
+  "data": {
+    "id": 1,
+    "name": "Áo khoác dạ",
+    ...
+  }
+}
+```
+
+#### cURL
+
+```bash
+curl -X PUT http://localhost:3000/api/products/1 \
+  -H "Authorization: Bearer <admin_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "category_id": 1,
+    "brand_id": 2,
+    "name": "Áo khoác dạ",
+    "description": "Áo khoác mùa đông",
+    "price": 450000,
+    "origin_price": 500000,
+    "discount": 50000,
+    "stock": 5,
+    "image": "https://example.com/khoac.jpg",
+    "images": ["https://example.com/k1.jpg"]
+  }'
+```
+
+---
+
+### 10. Xoá sản phẩm (Admin)
+
+- **[DELETE]** `/api/products/:id`
+- **Header**: `Authorization: Bearer <admin_token>`
+
+#### Response
+
+```json
+{
+  "status": true,
+  "message": "Product deleted successfully"
+}
+```
+
+#### cURL
+
+```bash
+curl -X DELETE http://localhost:3000/api/products/1 \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+---
+
+## IV. Giỏ hàng (Cart)
+
+### 1. Thêm sản phẩm vào giỏ hàng
+
+- **[POST]** `/api/cart/:user_id`
+- **Header**: `Authorization: Bearer <token>`
+
+#### Body Request
+
+```json
+{
+  "productId": 1,
+  "variantId": 5,
+  "quantity": 2
+}
+```
+
+#### Response
+
+```json
+{
+  "status": true,
+  "data": {
+    "product_name": "Áo thun",
+    "product_image": "https://example.com/img.jpg",
+    "price": 100000,
+    "stock": 20,
+    "color_id": 1,
+    "size_id": 2,
+    "variant_image": "https://example.com/variant.jpg",
+    "cart_quantity": 2
+  },
+  "message": "Item added to cart"
+}
+```
+
+#### cURL
+
+```bash
+curl -X POST http://localhost:3000/api/cart/1 \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productId": 1,
+    "variantId": 5,
+    "quantity": 2
+  }'
+```
+
+---
+
+### 2. Lấy danh sách sản phẩm trong giỏ
+
+- **[GET]** `/api/cart/:user_id`
+- **Header**: `Authorization: Bearer <token>`
+
+#### Response
+
+```json
+{
+  "status": true,
+  "data": [
+    {
+      "cart_id": 10,
+      "user_id": 1,
+      "product_id": 1,
+      "variant_id": 5,
+      "quantity": 2,
+      "added_at": "2025-03-22T09:30:00.000Z",
+      "product_name": "Áo thun",
+      "product_image": "https://example.com/img.jpg",
+      "color_id": 1,
+      "size_id": 2,
+      "price": 100000,
+      "stock": 20,
+      "variant_image": "https://example.com/variant.jpg"
+    }
+  ],
+  "message": "Cart retrieved"
+}
+```
+
+#### cURL
+
+```bash
+curl -X GET http://localhost:3000/api/cart/1 \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
+### 3. Cập nhật số lượng sản phẩm trong giỏ
+
+- **[PUT]** `/api/cart/:user_id`
+- **Header**: `Authorization: Bearer <token>`
+
+#### Body Request
+
+```json
+{
+  "cartId": 10,
+  "quantity": 5
+}
+```
+
+#### Response
+
+```json
+{
+  "status": true,
+  "data": {
+    "cart_id": 10,
+    "quantity": 5,
+    "added_at": "2025-03-22T09:40:00.000Z",
+    "product_name": "Áo thun",
+    "product_image": "https://example.com/img.jpg",
+    "color_id": 1,
+    "size_id": 2,
+    "price": 100000,
+    "stock": 20,
+    "variant_image": "https://example.com/variant.jpg"
+  },
+  "message": "Cart item updated"
+}
+```
+
+#### cURL
+
+```bash
+curl -X PUT http://localhost:3000/api/cart/1 \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cartId": 10,
+    "quantity": 5
+  }'
+```
+
+---
+
+### 4. Xoá 1 sản phẩm khỏi giỏ
+
+- **[DELETE]** `/api/cart/:user_id/item?cart_id=10`
+- **Header**: `Authorization: Bearer <token>`
+
+#### Response
+
+```json
+{
+  "status": true,
+  "message": "Cart item deleted"
+}
+```
+
+#### cURL
+
+```bash
+curl -X DELETE "http://localhost:3000/api/cart/1/item?cart_id=10" \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
+### 5. Xoá toàn bộ giỏ hàng
+
+- **[DELETE]** `/api/cart/:user_id`
+- **Header**: `Authorization: Bearer <token>`
+
+#### Response
+
+```json
+{
+  "status": true,
+  "message": "Cart cleared"
+}
+```
+
+#### cURL
+
+```bash
+curl -X DELETE http://localhost:3000/api/cart/1 \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
+## V. Đơn hàng (Orders)
+
+### 1. Tạo đơn hàng (checkout)
+
+- **[POST]** `/api/orders/:user_id/checkout`
+- **Header**: `Authorization: Bearer <token>`
+
+#### Body Request
+
+```json
+{
+  "recipient_name": "Nguyen Van A",
+  "recipient_phone": "0123456789",
+  "shipping_address": "Hà Nội",
+  "total_price": 500000,
+  "shipping_fee": 20000,
+  "discount": 50000,
+  "amount_paid": 470000,
+  "payment_method": "COD",
+  "shipping_method": "GHN",
+  "items": [
+    {
+      "product_id": 1,
+      "variant_id": 5,
+      "quantity": 2,
+      "unit_price": 250000,
+      "discount": 0,
+      "tax": 0,
+      "subtotal": 500000
+    }
+  ]
+}
+```
+
+#### Response
+
+```json
+{
+  "message": "Order created successfully",
+  "order": {
+    "order_id": 12,
+    "user_id": 1,
+    "status": "pending",
+    "items": [ ... ]
+  }
+}
+```
+
+#### cURL
+
+```bash
+curl -X POST http://localhost:3000/api/orders/1/checkout \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "recipient_name": "Nguyen Van A",
+    "recipient_phone": "0123456789",
+    "shipping_address": "Hà Nội",
+    "total_price": 500000,
+    "shipping_fee": 20000,
+    "discount": 50000,
+    "amount_paid": 470000,
+    "payment_method": "COD",
+    "shipping_method": "GHN",
+    "items": [
+      {
+        "product_id": 1,
+        "variant_id": 5,
+        "quantity": 2,
+        "unit_price": 250000,
+        "discount": 0,
+        "tax": 0,
+        "subtotal": 500000
+      }
+    ]
+  }'
+```
+
+---
+
+### 2. Lấy danh sách đơn hàng theo người dùng
+
+- **[GET]** `/api/orders/:user_id`
+- **Header**: `Authorization: Bearer <token>`
+
+#### Response
+
+```json
+[
+  {
+    "order_id": 12,
+    "user_id": 1,
+    "status": "pending",
+    "created_at": "2025-03-22T10:00:00.000Z",
+    ...
+  }
+]
+```
+
+#### cURL
+
+```bash
+curl -X GET http://localhost:3000/api/orders/1 \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
+### 3. Lấy chi tiết đơn hàng
+
+- **[GET]** `/api/orders/:user_id/:orderId`
+- **Header**: `Authorization: Bearer <token>`
+
+#### Response
+
+```json
+{
+  "order_id": 12,
+  "user_id": 1,
+  "status": "pending",
+  "items": [
+    {
+      "product_id": 1,
+      "variant_id": 5,
+      "quantity": 2,
+      ...
+    }
+  ]
+}
+```
+
+#### cURL
+
+```bash
+curl -X GET http://localhost:3000/api/orders/1/12 \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
+### 4. Cập nhật thông tin giao hàng
+
+- **[PATCH]** `/api/orders/:user_id/:orderId`
+- **Header**: `Authorization: Bearer <token>`
+
+#### Body Request
+
+```json
+{
+  "recipient_name": "Nguyen Van B",
+  "recipient_phone": "0909090909",
+  "shipping_address": "TP.HCM"
+}
+```
+
+#### Response
+
+```json
+{
+  "message": "Order updated"
+}
+```
+
+#### cURL
+
+```bash
+curl -X PATCH http://localhost:3000/api/orders/1/12 \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "recipient_name": "Nguyen Van B",
+    "recipient_phone": "0909090909",
+    "shipping_address": "TP.HCM"
+  }'
+```
+
+---
+
+### 5. Hủy đơn hàng
+
+- **[PATCH]** `/api/orders/:user_id/:orderId/cancel`
+- **Header**: `Authorization: Bearer <token>`
+
+#### Response
+
+```json
+{
+  "message": "Order cancelled and stock restored"
+}
+```
+
+#### cURL
+
+```bash
+curl -X PATCH http://localhost:3000/api/orders/1/12/cancel \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
+### 6. (Admin) Lấy tất cả đơn hàng
+
+- **[GET]** `/api/orders/getall`
+- **Header**: `Authorization: Bearer <admin_token>`
+
+#### Response
+
+```json
+[
+  {
+    "order_id": 12,
+    "user_id": 1,
+    "status": "pending",
+    ...
+  },
+  {
+    "order_id": 13,
+    "user_id": 2,
+    "status": "completed",
+    ...
+  }
+]
+```
+
+#### cURL
+
+```bash
+curl -X GET http://localhost:3000/api/orders/getall \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+---
+
+### 7. (Admin) Lấy đơn hàng theo trạng thái
+
+- **[GET]** `/api/orders/status/:status`
+- **Header**: `Authorization: Bearer <admin_token>`
+
+#### Response
+
+```json
+[
+  {
+    "order_id": 12,
+    "status": "pending",
+    ...
+  }
+]
+```
+
+#### Ví dụ cURL
+
+```bash
+curl -X GET http://localhost:3000/api/orders/status/pending \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+---
+
+### 8. (Admin) Cập nhật trạng thái đơn hàng
+
+- **[PATCH]** `/api/orders/:user_id/:orderId/status`
+- **Header**: `Authorization: Bearer <admin_token>`
+
+#### Body Request
+
+```json
+{
+  "status": "completed"
+}
+```
+
+#### Response
+
+```json
+{
+  "message": "Order status updated"
+}
+```
+
+#### cURL
+
+```bash
+curl -X PATCH http://localhost:3000/api/orders/1/12/status \
+  -H "Authorization: Bearer <admin_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "completed"
+  }'
+```
+
+---
+
+## VI. Thương hiệu (Brands)
+
+### 1. Lấy tất cả thương hiệu
+
+- **[GET]** `/api/brands`
+
+#### Response
+
+```json
+[
+  {
+    "brand_id": 1,
+    "name": "Nike",
+    "slug": "nike",
+    "description": "Thương hiệu thể thao nổi tiếng",
+    "logo": "https://example.com/nike.png"
+  },
+  ...
+]
+```
+
+#### cURL
+
+```bash
+curl -X GET http://localhost:3000/api/brands
+```
+
+---
+
+### 2. Lấy chi tiết thương hiệu theo ID
+
+- **[GET]** `/api/brands/:brandId`
+
+#### Response
+
+```json
+{
+  "brand_id": 1,
+  "name": "Nike",
+  "slug": "nike",
+  "description": "Thương hiệu thể thao nổi tiếng",
+  "logo": "https://example.com/nike.png"
+}
+```
+
+#### cURL
+
+```bash
+curl -X GET http://localhost:3000/api/brands/1
+```
+
+---
+
+### 3. Thêm mới thương hiệu (Admin)
+
+- **[POST]** `/api/brands`
+- **Header**: `Authorization: Bearer <admin_token>`
+
+#### Body Request
+
+```json
+{
+  "name": "Adidas",
+  "slug": "adidas",
+  "description": "Thương hiệu thể thao toàn cầu",
+  "logo": "https://example.com/adidas.png"
+}
+```
+
+#### Response
+
+```json
+{
+  "message": "Brand created successfully",
+  "brand_id": 2
+}
+```
+
+#### cURL
+
+```bash
+curl -X POST http://localhost:3000/api/brands \
+  -H "Authorization: Bearer <admin_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Adidas",
+    "slug": "adidas",
+    "description": "Thương hiệu thể thao toàn cầu",
+    "logo": "https://example.com/adidas.png"
+  }'
+```
+
+---
+
+### 4. Cập nhật thương hiệu (Admin)
+
+- **[PUT]** `/api/brands/:brandId`
+- **Header**: `Authorization: Bearer <admin_token>`
+
+#### Body Request
+
+```json
+{
+  "name": "Adidas Originals",
+  "slug": "adidas-originals",
+  "description": "Phong cách streetwear",
+  "logo": "https://example.com/adidas-originals.png"
+}
+```
+
+#### Response
+
+```json
+{
+  "message": "Brand updated successfully"
+}
+```
+
+#### cURL
+
+```bash
+curl -X PUT http://localhost:3000/api/brands/1 \
+  -H "Authorization: Bearer <admin_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Adidas Originals",
+    "slug": "adidas-originals",
+    "description": "Phong cách streetwear",
+    "logo": "https://example.com/adidas-originals.png"
+  }'
+```
+
+---
+
+### 5. Xoá thương hiệu (Admin)
+
+- **[DELETE]** `/api/brands/:brandId`
+- **Header**: `Authorization: Bearer <admin_token>`
+
+#### Response
+
+```json
+{
+  "message": "Brand deleted successfully"
+}
+```
+
+#### cURL
+
+```bash
+curl -X DELETE http://localhost:3000/api/brands/1 \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+---

@@ -1,4 +1,5 @@
-const pool = require("../config/db"); // Import MySQL connection
+const pool = require("../config/db");
+const bcrypt = require("bcrypt");
 
 const User = {
   // Lấy tất cả người dùng
@@ -24,6 +25,19 @@ const User = {
     }
   },
 
+  // get me
+  getMe: async (id) => {
+    try {
+      const [rows] = await pool.query(
+        "SELECT user_id, full_name, email, phone, address, role, status, created_at FROM users WHERE user_id = ?",
+        [id]
+      );
+      return rows[0];
+    } catch (error) {
+      throw error;
+    }
+  },
+
   // Tạo người dùng mới
   createUser: async (userData) => {
     const { full_name, email, password_hash, phone, address } = userData;
@@ -38,6 +52,34 @@ const User = {
     }
   },
 
+  // update password
+  updatePassword: async (id, oldPass, newPass) => {
+    try {
+      const [rows] = await pool.query("SELECT * FROM users WHERE user_id = ?", [
+        id,
+      ]);
+      if (rows.length === 0) {
+        return { status: false, error: "User not found" };
+      }
+
+      const user = rows[0];
+      const isValidPassword = await bcrypt.compare(oldPass, user.password_hash);
+      if (!isValidPassword) {
+        throw { status: false, message: "Invalid password" };
+      }
+
+      const hashedPassword = await bcrypt.hash(newPass, 10);
+
+      const [result] = await pool.query(
+        "UPDATE users SET password_hash = ? WHERE user_id = ?",
+        [hashedPassword, id]
+      );
+      return { status: true, message: "Password updated successfully" };
+    } catch (error) {
+      throw error;
+    }
+  },
+
   // Cập nhật thông tin người dùng
   updateUser: async (id, userData) => {
     const { full_name, phone, address } = userData;
@@ -46,7 +88,7 @@ const User = {
         "UPDATE users SET full_name = ?, phone = ?, address = ?, updated_at = NOW() WHERE user_id = ?",
         [full_name, phone, address, id]
       );
-      return result;
+      return { status: true, message: "User updated successfully" };
     } catch (error) {
       throw error;
     }

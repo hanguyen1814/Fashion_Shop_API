@@ -1,66 +1,51 @@
-const fs = require("fs");
-const Product = require("./models/product.model");
+const mysql = require("mysql2/promise");
 
-const filePath =
-  "E:\\Workspace\\Project Codes\\web\\Shop thoi trang\\API\\data.json"; // Đổi thành tên file JSON của bạn
+// Hàm bỏ dấu tiếng Việt
+const removeDiacritics = (str) => {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+};
 
-fs.readFile(filePath, "utf8", (err, data) => {
-  if (err) {
-    console.error("❌ Lỗi đọc file JSON:", err);
-    return;
-  }
+(async () => {
+  const connection = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "", // sửa nếu có mật khẩu
+    database: "shop_thoi_trang",
+  });
 
   try {
-    const dataObj = JSON.parse(data);
-    dataObj.forEach(async (item) => {
-      try {
-        const itemBasic = item.item_basic;
-        const product = {};
-        variants = [];
-        const colorOptions = itemBasic.tier_variations?.[0]?.options || null;
-        const colorImages = itemBasic.tier_variations?.[0]?.images || null;
-        const size = itemBasic.tier_variations?.[1]?.options || null;
-
-        product.category_id = 8;
-        product.brand_id = 1;
-        product.name = itemBasic.name;
-        product.description = "";
-        product.price = itemBasic.price_min / 100000;
-        product.origin_price = itemBasic.price_max / 100000;
-        product.discount = itemBasic.raw_discount;
-        product.stock = itemBasic.stock;
-        product.sold = itemBasic.sold;
-        product.image = itemBasic.image;
-        product.images = itemBasic.images;
-
-        if (colorOptions && size) {
-          colorOptions.forEach((color, index) => {
-            size.forEach((size) => {
-              variants.push({
-                color_name: color,
-                size_name: size,
-                price: product.price,
-                origin_price: product.origin_price,
-                discount: product.discount,
-                stock: 100,
-                sold: 50,
-                image: `https://down-vn.img.susercontent.com/file/${
-                  colorImages?.[index] || ""
-                }`,
-              });
-            });
-          });
-        }
-
-        product.variants = variants;
-
-        const add = await Product.create(product);
-        // console.log("✅ Thêm sản phẩm:", add);
-      } catch (error) {
-        console.error("❌ Lỗi thêm sản phẩm:", error);
-      }
-    });
-  } catch (error) {
-    console.error("❌ Lỗi parse JSON:", error);
+    // 1. Thêm cột mới nếu chưa có
+    await connection.execute(`
+      ALTER TABLE products
+      ADD COLUMN name_khong_dau VARCHAR(255)
+    `);
+    console.log("✅ Đã thêm cột 'name_khong_dau'");
+  } catch (err) {
+    if (err.code === "ER_DUP_FIELDNAME") {
+      console.log("⚠️ Cột 'name_khong_dau' đã tồn tại, bỏ qua bước thêm cột.");
+    } else {
+      throw err;
+    }
   }
-});
+
+  // 2. Lấy toàn bộ product_id và name
+  const [rows] = await connection.execute(
+    `SELECT product_id, name FROM products`
+  );
+
+  for (const row of rows) {
+    const nameKhongDau = removeDiacritics(row.name);
+    await connection.execute(
+      `UPDATE products SET name_khong_dau = ? WHERE product_id = ?`,
+      [nameKhongDau, row.product_id]
+    );
+    console.log(`→ Đã cập nhật: ${row.name} → ${nameKhongDau}`);
+  }
+
+  console.log("🎉 Đã cập nhật toàn bộ tên không dấu.");
+  await connection.end();
+})();

@@ -1,31 +1,44 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/user.model");
+require("dotenv").config();
 
-const SECRET_KEY = "your_secret_key"; // Replace with actual SECRET KEY
+const SECRET_KEY = process.env.SECRET_KEY;
 
 const UserController = {
   // Lấy danh sách người dùng
   getAllUsers: async (req, res) => {
     try {
       const users = await userModel.getAllUsers();
-      res.json(users);
+      res.json({ status: true, data: users });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ status: false, error: error.message });
     }
   },
 
   // Lấy thông tin một người dùng
   getUserById: async (req, res) => {
-    const { id } = req.params;
+    const { user_id } = req.params;
     try {
-      const users = await userModel.getUserById(id);
+      const users = await userModel.getUserById(user_id);
       if (users.length === 0) {
-        return res.status(404).json({ message: "User not found" });
+        return res
+          .status(404)
+          .json({ status: false, message: "User not found" });
       }
-      res.json(users[0]);
+      res.json({ status: true, data: users[0] });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ status: false, error: error.message });
+    }
+  },
+
+  getMe: async (req, res) => {
+    const userId = req.user.user_id;
+    try {
+      const result = await userModel.getMe(userId);
+      res.json({ status: true, data: result });
+    } catch (err) {
+      res.status(500).json({ status: false, error: err.message });
     }
   },
 
@@ -35,7 +48,7 @@ const UserController = {
       const { full_name, email, password, phone, address } = req.body;
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const result = await userModel.createUser({
+      await userModel.createUser({
         full_name,
         email,
         password_hash: hashedPassword,
@@ -43,9 +56,11 @@ const UserController = {
         address,
       });
 
-      res.status(201).json({ message: "User registered successfully" });
+      res
+        .status(201)
+        .json({ status: true, message: "User registered successfully" });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ status: false, error: error.message });
     }
   },
 
@@ -56,10 +71,10 @@ const UserController = {
     try {
       const users = await userModel.loginUser(email);
       if (users.length === 0) {
-        return res.status(401).json({ message: "Invalid email or password" });
+        return res
+          .status(401)
+          .json({ status: false, message: "Invalid email or password" });
       }
-
-      console.log(users[0]);
 
       const user = users[0];
       const isValidPassword = await bcrypt.compare(
@@ -68,7 +83,9 @@ const UserController = {
       );
 
       if (!isValidPassword) {
-        return res.status(401).json({ message: "Invalid email or password" });
+        return res
+          .status(401)
+          .json({ status: false, message: "Invalid email or password" });
       }
 
       const token = jwt.sign(
@@ -77,26 +94,39 @@ const UserController = {
         { expiresIn: "30d" }
       );
 
-      res.json({ message: "Login successful", token });
+      res.json({ status: true, message: "Login successful", token });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ status: false, error: error.message });
+    }
+  },
+
+  // update password
+  updatePassword: async (req, res) => {
+    const { user_id } = req.params;
+    const { oldPass, newPass } = req.body;
+
+    try {
+      const result = await userModel.updatePassword(user_id, oldPass, newPass);
+      res.json({ status: true, message: result.message });
+    } catch (error) {
+      res.status(500).json({ status: false, error: error.message });
     }
   },
 
   // Cập nhật thông tin người dùng
   updateUser: async (req, res) => {
-    const { id } = req.params;
+    const { user_id } = req.params;
     const { full_name, phone, address } = req.body;
 
     try {
-      const result = await userModel.updateUser(id, {
+      const result = await userModel.updateUser(user_id, {
         full_name,
         phone,
         address,
       });
-      res.json({ message: "User updated successfully" });
+      res.json({ status: true, message: result.message });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ status: false, error: error.message });
     }
   },
 
@@ -105,10 +135,10 @@ const UserController = {
     const { id } = req.params;
 
     try {
-      const result = await userModel.deleteUser(id);
-      res.json({ message: "User deleted successfully" });
+      await userModel.deleteUser(id);
+      res.json({ status: true, message: "User deleted successfully" });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ status: false, error: error.message });
     }
   },
 };

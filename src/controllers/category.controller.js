@@ -9,9 +9,9 @@ const CategoryController = {
         const products = await Product.getByCatId(category.id);
         category.products = products;
       }
-      res.json(categories);
+      res.status(200).json({ success: true, data: categories });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ success: false, message: err.message });
     }
   },
 
@@ -20,12 +20,14 @@ const CategoryController = {
     try {
       const result = await Category.getById(id);
       if (!result)
-        return res.status(404).json({ message: "Category not found" });
+        return res
+          .status(404)
+          .json({ success: false, message: "Category not found" });
       const products = await Product.getByCatId(id, 1, 10);
       result.products = products;
-      res.json(result);
+      res.status(200).json({ success: true, data: result });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ success: false, message: err.message });
     }
   },
 
@@ -34,12 +36,14 @@ const CategoryController = {
     try {
       const result = await Category.getBySlug(slug);
       if (!result)
-        return res.status(404).json({ message: "Category not found" });
+        return res
+          .status(404)
+          .json({ success: false, message: "Category not found" });
       const products = await Product.getByCatId(result.id);
       result.products = products;
-      res.json(result);
+      res.status(200).json({ success: true, data: result });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ success: false, message: err.message });
     }
   },
 
@@ -56,9 +60,11 @@ const CategoryController = {
         status,
         image,
       });
-      res.status(201).json({ message: "Category created successfully" });
+      res
+        .status(201)
+        .json({ success: true, message: "Category created successfully" });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ success: false, message: err.message });
     }
   },
 
@@ -76,9 +82,11 @@ const CategoryController = {
         status,
         image,
       });
-      res.json({ message: "Category updated successfully" });
+      res
+        .status(200)
+        .json({ success: true, message: "Category updated successfully" });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ success: false, message: err.message });
     }
   },
 
@@ -86,9 +94,11 @@ const CategoryController = {
     const { id } = req.params;
     try {
       await Category.deleteCategory(id);
-      res.json({ message: "Category deleted successfully" });
+      res
+        .status(200)
+        .json({ success: true, message: "Category deleted successfully" });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ success: false, message: err.message });
     }
   },
 };

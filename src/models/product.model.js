@@ -2,7 +2,15 @@ const db = require("../config/db");
 
 const Product = {};
 
-Product.getAll = async (page = 1, limit = 10) => {
+const removeDiacritics = (str) => {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+};
+
+Product.getAll = async (page = 1, limit = 20) => {
   const offset = (page - 1) * limit;
 
   // Bước 1: Lấy danh sách product_id cần lấy
@@ -175,7 +183,7 @@ Product.getById = async (productId) => {
   }
 };
 
-Product.getByCatId = async (categoryId, page = 1, limit = 10) => {
+Product.getByCatId = async (categoryId, page = 1, limit = 20) => {
   const offset = (page - 1) * limit;
 
   const productIdsQuery = `
@@ -425,6 +433,109 @@ Product.delete = async (productId) => {
   } catch (err) {
     console.error(err);
     return { status: false, error: err.message };
+  }
+};
+
+Product.searchByName = async (name, page = 1, limit = 20) => {
+  const offset = (page - 1) * limit;
+
+  const sql = `
+    SELECT 
+      p.product_id,
+      p.name,
+      p.price,
+      p.origin_price,
+      p.discount,
+      p.stock,
+      p.image,
+      p.category_id,
+      p.brand_id,
+      p.created_at,
+      p.updated_at
+    FROM products p
+    WHERE p.name_khong_dau LIKE ?
+    LIMIT ? OFFSET ?;
+  `;
+
+  try {
+    const [results] = await db.query(sql, [`%${name}%`, limit, offset]);
+
+    return results;
+  } catch (err) {
+    console.error("Error searching products by name:", err);
+    return [];
+  }
+};
+
+Product.searchByColor = async (color, page = 1, limit = 20) => {
+  const offset = (page - 1) * limit;
+
+  const sql = `
+    SELECT DISTINCT p.product_id, p.name, p.price, p.origin_price, p.discount, p.description,
+           p.image, p.category_id, p.brand_id, p.created_at, p.updated_at
+    FROM products p
+    WHERE p.product_id IN (
+      SELECT DISTINCT v.product_id
+      FROM variants v
+      JOIN models m ON v.color_id = m.model_id
+      WHERE m.\`group\` = 'color'
+        AND LOWER(CONVERT(m.name USING utf8)) LIKE ?
+    )
+    LIMIT ? OFFSET ?;
+  `;
+
+  try {
+    const [results] = await db.query(sql, [`%${color}%`, limit, offset]);
+    return results;
+  } catch (err) {
+    console.error("Error searching products by color:", err);
+    return [];
+  }
+};
+
+Product.searchBySize = async (size, page = 1, limit = 20) => {
+  const offset = (page - 1) * limit;
+
+  const sql = `
+    SELECT DISTINCT p.product_id, p.name, p.price, p.origin_price, p.discount, p.description,
+           p.image, p.category_id, p.brand_id, p.created_at, p.updated_at
+    FROM products p
+    WHERE p.product_id IN (
+      SELECT DISTINCT v.product_id
+      FROM variants v
+      JOIN models m ON v.size_id = m.model_id
+      WHERE m.\`group\` = 'size'
+        AND LOWER(CONVERT(m.name USING utf8)) LIKE ?
+    )
+    LIMIT ? OFFSET ?;
+  `;
+
+  try {
+    const [results] = await db.query(sql, [`%${size}%`, limit, offset]);
+    return results;
+  } catch (err) {
+    console.error("Error searching products by size:", err);
+    return [];
+  }
+};
+
+Product.searchByPrice = async (minPrice, maxPrice, page = 1, limit = 20) => {
+  const offset = (page - 1) * limit;
+
+  const sql = `
+    SELECT p.product_id, p.name, p.price, p.origin_price, p.discount, p.description,
+           p.image, p.category_id, p.brand_id, p.created_at, p.updated_at
+    FROM products p
+    WHERE p.price >= ? AND p.price <= ?
+    LIMIT ? OFFSET ?;
+  `;
+
+  try {
+    const [results] = await db.query(sql, [minPrice, maxPrice, limit, offset]);
+    return results;
+  } catch (err) {
+    console.error("Error searching products by price:", err);
+    return [];
   }
 };
 

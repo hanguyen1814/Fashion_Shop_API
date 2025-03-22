@@ -1,15 +1,26 @@
 const express = require("express");
 const OrderController = require("../controllers/order.controller");
+const { verifyToken, isAdmin, isOwner } = require("../middlewares/auth");
 
 const router = express.Router();
 
-// Create a new order
-router.post("/", OrderController.createOrder);
+// Apply verifyToken globally to all routes
+router.use(verifyToken);
 
-// Get order by ID
-router.get("/:orderId", OrderController.getOrderById);
+// Admin routes
+router.get("/getall", isAdmin, OrderController.getAllOrders);
+router.get("/status/:status", isAdmin, OrderController.getOrdersByStatus);
+router.patch(
+  "/:user_id/:orderId/status",
+  isAdmin,
+  OrderController.editOrderStatus
+);
 
-// Cancel an order
-router.put("/:orderId/cancel", OrderController.cancelOrder);
+// User-specific routes
+router.get("/:user_id", isOwner, OrderController.getOrdersByUser);
+router.post("/:user_id/checkout", isOwner, OrderController.createOrder);
+router.get("/:user_id/:orderId", isOwner, OrderController.getOrderById);
+router.patch("/:user_id/:orderId", isOwner, OrderController.editOrder);
+router.patch("/:user_id/:orderId/cancel", isOwner, OrderController.cancelOrder);
 
 module.exports = router;
