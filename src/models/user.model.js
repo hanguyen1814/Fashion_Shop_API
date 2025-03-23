@@ -32,7 +32,7 @@ const User = {
         "SELECT user_id, full_name, email, phone, address, role, status, created_at FROM users WHERE user_id = ?",
         [id]
       );
-      return rows[0];
+      return rows;
     } catch (error) {
       throw error;
     }

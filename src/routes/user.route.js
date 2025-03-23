@@ -4,8 +4,8 @@ const UserController = require("../controllers/user.controller");
 const { verifyToken, isOwner, isAdmin } = require("../middlewares/auth");
 
 router.get("/", verifyToken, isAdmin, UserController.getAllUsers);
+router.get("/me", verifyToken, UserController.getMe); // Ensure /me route is correctly defined
 router.get("/:user_id", verifyToken, isOwner, UserController.getUserById);
-router.get("/me", verifyToken, UserController.getMe);
 router.post("/register", UserController.registerUser);
 router.post("/login", UserController.loginUser);
 router.put(

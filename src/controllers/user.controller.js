@@ -33,10 +33,16 @@ const UserController = {
   },
 
   getMe: async (req, res) => {
-    const userId = req.user.user_id;
     try {
-      const result = await userModel.getMe(userId);
-      res.json({ status: true, data: result });
+      const userId = req.user.user_id; // Ensure user_id is correctly accessed
+      const result = await userModel.getUserById(userId); // Use getUserById to fetch user details
+      console.log(result);
+      if (result.length === 0) {
+        return res
+          .status(404)
+          .json({ status: false, message: "User not found" });
+      }
+      res.json({ status: true, data: result[0] });
     } catch (err) {
       res.status(500).json({ status: false, error: err.message });
     }

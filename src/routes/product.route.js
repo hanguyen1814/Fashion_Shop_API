@@ -10,6 +10,7 @@ router.get("/search/name", ProductController.searchProductsByName);
 router.get("/search/color", ProductController.searchProductsByColor);
 router.get("/search/size", ProductController.searchProductsBySize);
 router.get("/search/price", ProductController.searchProductsByPrice);
+
 router.post("/", verifyToken, isAdmin, ProductController.createProduct);
 router.put("/:id", verifyToken, isAdmin, ProductController.updateProduct);
 router.delete("/:id", verifyToken, isAdmin, ProductController.deleteProduct);

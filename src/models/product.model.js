@@ -322,43 +322,74 @@ Product.create = async (newProduct) => {
       variant.color_name = normalizedColorName;
       variant.size_name = normalizedSizeName;
 
-      await connection.query("LOCK TABLES models WRITE;"); // Khóa bảng models để tránh deadlock
-      try {
-        // Kiểm tra hoặc thêm mới màu sắc vào bảng models
-        if (normalizedColorName) {
-          const [colorRows] = await connection.query(
-            "SELECT model_id FROM models WHERE name = ? AND `group` = 'color' LIMIT 1",
-            [normalizedColorName]
-          );
-          if (colorRows.length > 0) {
-            colorId = colorRows[0].model_id;
-          } else {
+      // Kiểm tra hoặc thêm mới màu sắc vào bảng models
+      if (normalizedColorName) {
+        const [colorRows] = await connection.query(
+          "SELECT model_id FROM models WHERE name = ? AND `group` = 'color' LIMIT 1",
+          [normalizedColorName]
+        );
+        if (colorRows.length > 0 && colorRows[0].model_id) {
+          colorId = colorRows[0].model_id;
+        } else {
+          try {
             const [colorInsert] = await connection.query(
               "INSERT INTO models (name, `group`, created_at, updated_at) VALUES (?, 'color', NOW(), NOW())",
               [normalizedColorName]
             );
             colorId = colorInsert.insertId;
+          } catch (err) {
+            if (err.code === "ER_DUP_ENTRY") {
+              const [existingColor] = await connection.query(
+                "SELECT model_id FROM models WHERE name = ? AND `group` = 'color' LIMIT 1",
+                [normalizedColorName]
+              );
+              if (existingColor.length > 0) {
+                colorId = existingColor[0].model_id;
+              }
+            } else {
+              throw err;
+            }
           }
         }
+      }
 
-        // Kiểm tra hoặc thêm mới kích thước vào bảng models
-        if (normalizedSizeName) {
-          const [sizeRows] = await connection.query(
-            "SELECT model_id FROM models WHERE name = ? AND `group` = 'size' LIMIT 1",
-            [normalizedSizeName]
-          );
-          if (sizeRows.length > 0) {
-            sizeId = sizeRows[0].model_id;
-          } else {
+      // Kiểm tra hoặc thêm mới kích thước vào bảng models
+      if (normalizedSizeName) {
+        const [sizeRows] = await connection.query(
+          "SELECT model_id FROM models WHERE name = ? AND `group` = 'size' LIMIT 1",
+          [normalizedSizeName]
+        );
+        if (sizeRows.length > 0 && sizeRows[0].model_id) {
+          sizeId = sizeRows[0].model_id;
+        } else {
+          try {
             const [sizeInsert] = await connection.query(
               "INSERT INTO models (name, `group`, created_at, updated_at) VALUES (?, 'size', NOW(), NOW())",
               [normalizedSizeName]
             );
             sizeId = sizeInsert.insertId;
+          } catch (err) {
+            if (err.code === "ER_DUP_ENTRY") {
+              const [existingSize] = await connection.query(
+                "SELECT model_id FROM models WHERE name = ? AND `group` = 'size' LIMIT 1",
+                [normalizedSizeName]
+              );
+              if (existingSize.length > 0) {
+                sizeId = existingSize[0].model_id;
+              }
+            } else {
+              throw err;
+            }
           }
         }
-      } finally {
-        await connection.query("UNLOCK TABLES;"); // Mở khóa bảng models sau khi xử lý
+      }
+
+      // Skip variant if both colorId and sizeId are null
+      if (!colorId && !sizeId) {
+        console.warn(
+          `Skipping variant for product_id ${productId} due to missing color and size.`
+        );
+        continue;
       }
 
       // Thêm variant vào bảng variants
