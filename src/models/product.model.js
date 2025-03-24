@@ -550,7 +550,7 @@ Product.delete = async (productId) => {
     if (result.affectedRows === 0) {
       throw new Error("Product not found");
     }
-    return { message: "Product deleted successfully" };
+    return { status: true, message: "Product deleted successfully" };
   } catch (err) {
     console.error(err);
     return { status: false, error: err.message };
@@ -569,6 +569,7 @@ Product.searchByName = async (name, page = 1, limit = 20) => {
       p.discount,
       p.stock,
       p.image,
+      p.images
       p.category_id,
       p.brand_id,
       p.created_at,
@@ -593,7 +594,7 @@ Product.searchByColor = async (color, page = 1, limit = 20) => {
 
   const sql = `
     SELECT DISTINCT p.product_id, p.name, p.price, p.origin_price, p.discount, p.description,
-           p.image, p.category_id, p.brand_id, p.created_at, p.updated_at
+           p.image, p.images, p.category_id, p.brand_id, p.created_at, p.updated_at
     FROM products p
     WHERE p.product_id IN (
       SELECT DISTINCT v.product_id
@@ -619,7 +620,7 @@ Product.searchBySize = async (size, page = 1, limit = 20) => {
 
   const sql = `
     SELECT DISTINCT p.product_id, p.name, p.price, p.origin_price, p.discount, p.description,
-           p.image, p.category_id, p.brand_id, p.created_at, p.updated_at
+           p.image, p.images, p.category_id, p.brand_id, p.created_at, p.updated_at
     FROM products p
     WHERE p.product_id IN (
       SELECT DISTINCT v.product_id
@@ -645,7 +646,7 @@ Product.searchByPrice = async (minPrice, maxPrice, page = 1, limit = 20) => {
 
   const sql = `
     SELECT p.product_id, p.name, p.price, p.origin_price, p.discount, p.description,
-           p.image, p.category_id, p.brand_id, p.created_at, p.updated_at
+           p.image, p.images, p.category_id, p.brand_id, p.created_at, p.updated_at
     FROM products p
     WHERE p.price >= ? AND p.price <= ?
     LIMIT ? OFFSET ?;
