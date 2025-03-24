@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const path = require("path");
 
 const userRoutes = require("./routes/user.route");
 const productRoutes = require("./routes/product.route");
@@ -14,7 +15,7 @@ const app = express();
 app.use(cors({ origin: "*" })); // Allow requests from any origin
 app.use(bodyParser.json());
 
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/brands", brandRoutes);
 app.use("/api/users", userRoutes);
