@@ -8,12 +8,14 @@ const categoryRoutes = require("./routes/category.route");
 const cartRoutes = require("./routes/cart.route");
 const orderRoutes = require("./routes/order.routes");
 const brandRoutes = require("./routes/brand.route");
+const uploadRoutes = require("./routes/upload.route");
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
 app.use("/uploads", express.static("uploads"));
+app.use("/api/uploads", uploadRoutes);
 app.use("/api/brands", brandRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
