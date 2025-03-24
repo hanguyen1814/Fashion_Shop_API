@@ -11,7 +11,7 @@ const brandRoutes = require("./routes/brand.route");
 const uploadRoutes = require("./routes/upload.route");
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: "*" })); // Allow requests from any origin
 app.use(bodyParser.json());
 
 app.use("/uploads", express.static("uploads"));
