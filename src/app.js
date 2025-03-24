@@ -14,13 +14,7 @@ const uploadRoutes = require("./routes/upload.route");
 const app = express();
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin || /^http:\/\/localhost(:\d+)?$/.test(origin)) {
-        callback(null, true); // Allow requests from any localhost port
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: true, // Allow requests from any origin
     credentials: true, // Allow cookies and credentials to be sent
   })
 );
