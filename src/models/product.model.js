@@ -569,7 +569,7 @@ Product.searchByName = async (name, page = 1, limit = 20) => {
       p.discount,
       p.stock,
       p.image,
-      p.images
+      p.images, -- Added missing comma here
       p.category_id,
       p.brand_id,
       p.created_at,
