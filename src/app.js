@@ -20,7 +20,7 @@ app.use(
 );
 app.use(bodyParser.json());
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads"))); // Ensure correct path to uploads folder
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/brands", brandRoutes);
 app.use("/api/users", userRoutes);
