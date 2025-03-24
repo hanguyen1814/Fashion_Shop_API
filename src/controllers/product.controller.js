@@ -181,6 +181,36 @@ const productController = {
       res.status(500).json({ status: false, error: err.message });
     }
   },
+  createProductWithImage: async (req, res) => {
+    try {
+      const productData = req.body;
+      if (req.file) {
+        productData.image = `/uploads/${req.file.filename}`;
+      }
+      const result = await Product.create(productData);
+      if (!result.status) {
+        return res.status(400).json({ status: false, error: result.error });
+      }
+      res.status(201).json({ status: true, data: result });
+    } catch (err) {
+      res.status(500).json({ status: false, error: err.message });
+    }
+  },
+  updateProductWithImage: async (req, res) => {
+    try {
+      const updatedProduct = req.body;
+      if (req.file) {
+        updatedProduct.image = `/uploads/${req.file.filename}`;
+      }
+      const result = await Product.update(req.params.id, updatedProduct);
+      if (!result.status) {
+        return res.status(400).json({ status: false, error: result.error });
+      }
+      res.status(200).json({ status: true, data: result });
+    } catch (err) {
+      res.status(500).json({ status: false, error: err.message });
+    }
+  },
 };
 
 module.exports = productController;

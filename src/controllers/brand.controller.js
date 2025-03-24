@@ -1,4 +1,5 @@
 const Brand = require("../models/brand.model");
+const path = require("path");
 
 const BrandController = {};
 
@@ -34,6 +35,9 @@ BrandController.getBrandById = async (req, res) => {
 BrandController.createBrand = async (req, res) => {
   try {
     const brandData = req.body;
+    if (req.file) {
+      brandData.logo = path.join("uploads", req.file.filename);
+    }
     const result = await Brand.createBrand(brandData);
     if (result.status) {
       return res.status(201).json({
@@ -53,6 +57,9 @@ BrandController.updateBrand = async (req, res) => {
   try {
     const { brandId } = req.params;
     const brandData = req.body;
+    if (req.file) {
+      brandData.logo = path.join("uploads", req.file.filename);
+    }
     const result = await Brand.updateBrand(brandId, brandData);
     if (result.status) {
       return res.status(200).json({ message: result.message });

@@ -424,29 +424,119 @@ Product.create = async (newProduct) => {
 };
 
 Product.update = async (productId, updatedProduct) => {
-  const sql =
-    "UPDATE products SET category_id = ?, brand_id = ?, name = ?, description = ?, price = ?, origin_price = ?, discount = ?, stock = ?, image = ?, images = ?, updated_at = NOW() WHERE product_id = ?";
-  const values = [
-    updatedProduct.category_id,
-    updatedProduct.brand_id,
-    updatedProduct.name,
-    updatedProduct.description,
-    updatedProduct.price,
-    updatedProduct.origin_price,
-    updatedProduct.discount,
-    updatedProduct.stock,
-    updatedProduct.image,
-    JSON.stringify(updatedProduct.images),
-    productId,
-  ];
-
+  const connection = await db.getConnection(); // Lấy kết nối từ pool
   try {
-    const [result] = await db.query(sql, values);
-    if (result.affectedRows === 0) {
+    await connection.beginTransaction();
+
+    // Cập nhật thông tin sản phẩm trong bảng products
+    const productSql = `
+      UPDATE products 
+      SET category_id = ?, brand_id = ?, name = ?, description = ?, price = ?, origin_price = ?, discount = ?, stock = ?, image = ?, images = ?, updated_at = NOW() 
+      WHERE product_id = ?`;
+    const productValues = [
+      updatedProduct.category_id,
+      updatedProduct.brand_id,
+      updatedProduct.name,
+      updatedProduct.description,
+      updatedProduct.price,
+      updatedProduct.origin_price,
+      updatedProduct.discount,
+      updatedProduct.stock,
+      updatedProduct.image,
+      JSON.stringify(updatedProduct.images),
+      productId,
+    ];
+
+    const [productResult] = await connection.query(productSql, productValues);
+    if (productResult.affectedRows === 0) {
       throw new Error("Product not found");
     }
-    return { id: productId, ...updatedProduct };
+
+    // Xóa các variants cũ của sản phẩm
+    await connection.query("DELETE FROM variants WHERE product_id = ?", [
+      productId,
+    ]);
+
+    // Xử lý variants mới
+    for (const variant of updatedProduct.variants) {
+      let colorId = null;
+      let sizeId = null;
+
+      // Chuẩn hóa tên màu sắc và kích thước thành chữ in hoa
+      const normalizedColorName = variant.color_name
+        ? variant.color_name.toUpperCase().trim()
+        : null;
+      const normalizedSizeName = variant.size_name
+        ? variant.size_name.toUpperCase().trim()
+        : null;
+
+      // Kiểm tra hoặc thêm mới màu sắc vào bảng models
+      if (normalizedColorName) {
+        const [colorRows] = await connection.query(
+          "SELECT model_id FROM models WHERE name = ? AND `group` = 'color' LIMIT 1",
+          [normalizedColorName]
+        );
+        if (colorRows.length > 0 && colorRows[0].model_id) {
+          colorId = colorRows[0].model_id;
+        } else {
+          const [colorInsert] = await connection.query(
+            "INSERT INTO models (name, `group`, created_at, updated_at) VALUES (?, 'color', NOW(), NOW())",
+            [normalizedColorName]
+          );
+          colorId = colorInsert.insertId;
+        }
+      }
+
+      // Kiểm tra hoặc thêm mới kích thước vào bảng models
+      if (normalizedSizeName) {
+        const [sizeRows] = await connection.query(
+          "SELECT model_id FROM models WHERE name = ? AND `group` = 'size' LIMIT 1",
+          [normalizedSizeName]
+        );
+        if (sizeRows.length > 0 && sizeRows[0].model_id) {
+          sizeId = sizeRows[0].model_id;
+        } else {
+          const [sizeInsert] = await connection.query(
+            "INSERT INTO models (name, `group`, created_at, updated_at) VALUES (?, 'size', NOW(), NOW())",
+            [normalizedSizeName]
+          );
+          sizeId = sizeInsert.insertId;
+        }
+      }
+
+      // Skip variant if both colorId and sizeId are null
+      if (!colorId && !sizeId) {
+        console.warn(
+          `Skipping variant for product_id ${productId} due to missing color and size.`
+        );
+        continue;
+      }
+
+      // Thêm variant vào bảng variants
+      const variantSql = `
+        INSERT INTO variants (product_id, color_id, size_id, price, origin_price, discount, stock, image, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+      const variantValues = [
+        productId,
+        colorId,
+        sizeId,
+        variant.price,
+        variant.origin_price,
+        variant.discount,
+        variant.stock,
+        variant.image,
+      ];
+
+      await connection.query(variantSql, variantValues);
+    }
+
+    await connection.commit(); // Xác nhận giao dịch
+    connection.release(); // Giải phóng kết nối
+
+    return { status: true, product_id: productId, ...updatedProduct };
   } catch (err) {
+    await connection.rollback();
+    connection.release();
     console.error(err);
     return { status: false, error: err.message };
   }

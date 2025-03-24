@@ -48,9 +48,12 @@ const CategoryController = {
   },
 
   createCategory: async (req, res) => {
-    const { name, slug, description, parent_id, brand_id, status, image } =
-      req.body;
+    const { name, slug, description, parent_id, brand_id, status } = req.body;
+    let image = req.body.image;
     try {
+      if (req.file) {
+        image = `/uploads/${req.file.filename}`;
+      }
       await Category.createCategory({
         name,
         slug,
@@ -70,9 +73,12 @@ const CategoryController = {
 
   updateCategory: async (req, res) => {
     const { id } = req.params;
-    const { name, slug, description, parent_id, brand_id, status, image } =
-      req.body;
+    const { name, slug, description, parent_id, brand_id, status } = req.body;
+    let image = req.body.image;
     try {
+      if (req.file) {
+        image = `/uploads/${req.file.filename}`;
+      }
       await Category.updateCategory(id, {
         name,
         slug,

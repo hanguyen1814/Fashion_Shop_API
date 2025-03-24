@@ -39,7 +39,7 @@ Brand.createBrand = async (brand) => {
       `
       INSERT INTO brands (name, slug, description, logo) VALUES (?, ?, ?, ?);
       `,
-      [name, slug, description, logo]
+      [name, slug, description, logo || null]
     );
     return { status: true, data: { brand_id: results.insertId } };
   } catch (err) {
@@ -55,7 +55,7 @@ Brand.updateBrand = async (brandId, brand) => {
       `
       UPDATE brands SET name = ?, slug = ?, description = ?, logo = ? WHERE brand_id = ?;
       `,
-      [name, slug, description, logo, brandId]
+      [name, slug, description, logo || null, brandId]
     );
     if (results.affectedRows === 0) {
       return { status: false, error: "Brand not found or no changes made" };
