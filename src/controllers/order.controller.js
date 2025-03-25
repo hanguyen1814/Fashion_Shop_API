@@ -98,7 +98,7 @@ OrderController.getAllOrders = async (req, res) => {
 OrderController.getOrdersByUser = async (req, res) => {
   try {
     const { user_id } = req.params;
-    const result = await Order.getOrdersByUser(user_id);
+    const result = await Order.getOrdersByUserId(user_id);
 
     if (result.status) {
       return res.status(200).json(result.orders);
